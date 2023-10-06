@@ -12,37 +12,31 @@ pub mod board;
 pub mod tile;
 pub mod block;
 
+const SCREEN_SIZE: (f32, f32) = (1920.0,1280.0);
+const BOARD_POS: graphics::Rect = graphics::Rect::new(640.0,0.0,1280.0,1280.0);
+
 struct MainState {
-    pos_x: f32,
-    circle: graphics::Mesh,
+    board: board::Board
 }
 
 impl MainState {
     fn new(ctx: &mut Context) -> GameResult<MainState> {
-        let circle = graphics::Mesh::new_circle(
-            ctx,
-            graphics::DrawMode::fill(),
-            vec2(0., 0.),
-            100.0,
-            2.0,
-            Color::WHITE,
-        )?;
-
-        Ok(MainState { pos_x: 0.0, circle })
+        Ok(MainState {
+            board: board::Board::new(BOARD_POS)?
+        })
     }
 }
 
 impl event::EventHandler for MainState {
-    fn update(&mut self, _ctx: &mut Context) -> GameResult {
-        self.pos_x = self.pos_x % 800.0 + 1.0;
+    fn update(&mut self, ctx: &mut Context) -> GameResult {
+        self.board.update(ctx)?;
         Ok(())
     }
 
     fn draw(&mut self, ctx: &mut Context) -> GameResult {
-        let mut canvas =
-            graphics::Canvas::from_frame(ctx, graphics::Color::from([0.1, 0.2, 0.3, 1.0]));
+        let mut canvas = graphics::Canvas::from_frame(ctx, graphics::Color::new(1.0, 0.0, 1.0, 1.0));
 
-        canvas.draw(&self.circle, Vec2::new(self.pos_x, 380.0));
+        self.board.draw(ctx, &mut canvas)?;
 
         canvas.finish(ctx)?;
 
@@ -52,8 +46,8 @@ impl event::EventHandler for MainState {
 
 pub fn main() -> GameResult {
     let cb = ggez::ContextBuilder::new("manufacturing", "r0ckwav3")
-        .window_setup(ggez::conf::WindowSetup::default().title("A Manufacturing Game(TM)"));
-        // .window_mode(ggez::conf::WindowMode::default().dimensions(SCREEN_SIZE.0, SCREEN_SIZE.1));
+        .window_setup(ggez::conf::WindowSetup::default().title("A Manufacturing Game(TM)"))
+        .window_mode(ggez::conf::WindowMode::default().dimensions(SCREEN_SIZE.0, SCREEN_SIZE.1));
     let (mut ctx, event_loop) = cb.build()?;
     let state = MainState::new(&mut ctx)?;
     event::run(ctx, event_loop, state)

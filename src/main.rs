@@ -32,7 +32,7 @@ impl MainState {
     }
 }
 
-impl event::EventHandler<ggez::GameError> for MainState {
+impl event::EventHandler for MainState {
     fn update(&mut self, _ctx: &mut Context) -> GameResult {
         self.pos_x = self.pos_x % 800.0 + 1.0;
         Ok(())
@@ -51,7 +51,9 @@ impl event::EventHandler<ggez::GameError> for MainState {
 }
 
 pub fn main() -> GameResult {
-    let cb = ggez::ContextBuilder::new("manufacturing", "r0ckwav3");
+    let cb = ggez::ContextBuilder::new("manufacturing", "r0ckwav3")
+        .window_setup(ggez::conf::WindowSetup::default().title("A Manufacturing Game(TM)"));
+        // .window_mode(ggez::conf::WindowMode::default().dimensions(SCREEN_SIZE.0, SCREEN_SIZE.1));
     let (mut ctx, event_loop) = cb.build()?;
     let state = MainState::new(&mut ctx)?;
     event::run(ctx, event_loop, state)

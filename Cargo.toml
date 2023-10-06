@@ -2,7 +2,9 @@
 name = "manufacturing-game"
 version = "0.1.0"
 edition = "2021"
+authors = ["r0ckwav3 peterrockwave@gmail.com"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+ggez = "0.9.3"

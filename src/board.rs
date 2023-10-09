@@ -187,4 +187,23 @@ impl BoardState{
             block_objects: Vec::new(),
         })
     }
+
+    // returns whether something got removed
+    fn placeTile(&mut self, tiletype: TileType, x: i32, y: i32) -> bool{
+        let mut to_remove: Option<usize> = None;
+        let newtile = Tile::new(tiletype,x,y);
+        for (i, tile) in self.tiles.iter().enumerate(){
+            if newtile.posEq(tile){
+                to_remove = Some(i);
+            }
+        }
+
+        if let Some(i) = to_remove{
+            self.tiles[i] = newtile;
+        }else{
+            self.tiles.push(newtile);
+        }
+
+        to_remove.is_some()
+    }
 }

@@ -13,6 +13,7 @@ pub struct Tile {
     y: i32
 }
 
+#[derive(Clone, Copy)]
 pub enum Direction{
     Up,
     Down,
@@ -20,7 +21,9 @@ pub enum Direction{
     Right
 }
 
+#[derive(Eq, PartialEq, Hash, Debug, Clone, Copy)]
 pub enum TileType{
+    Empty,
     PushTile
 }
 
@@ -43,16 +46,24 @@ impl Tile{
         }
     }
 
-    pub fn pos_eq(&self, other: &Tile) -> bool{
-        self.x==other.x && self.y == other.y
-    }
-
     pub fn get_x(&self) -> i32{
         self.x
     }
 
     pub fn get_y(&self) -> i32{
         self.y
+    }
+
+    pub fn get_type(&self) -> TileType{
+        self.tiletype
+    }
+
+    pub fn get_dir(&self) -> Direction{
+        self.dir
+    }
+
+    pub fn pos_eq(&self, other: &Tile) -> bool{
+        self.x==other.x && self.y == other.y
     }
 
     pub fn rotate(&mut self){
@@ -67,6 +78,17 @@ impl Direction {
             Direction::Down  => Direction::Left,
             Direction::Left  => Direction::Up,
             Direction::Up    => Direction::Right,
+        }
+    }
+
+    // convert to a radian counterclockwise rotation
+    pub fn to_rot(&self) -> f32{
+        let pi = std::f32::consts::PI;
+        match self{
+            Direction::Right => 0.0,
+            Direction::Down  => pi*0.5,
+            Direction::Left  => pi,
+            Direction::Up    => pi*1.5
         }
     }
 
@@ -109,6 +131,23 @@ impl TileType{
             )?,
             graphics::DrawParam::default()
         );
+        // draw the sepecific tile types
+        if tiletype == TileType::PushTile{
+            image_canvas.draw(
+                &graphics::Mesh::new_polyline(
+                    ctx,
+                    graphics::DrawMode::fill(),
+                    &[
+                        glam::vec2(tilesize*0.5,tilesize*0.2),
+                        glam::vec2(tilesize*0.2,tilesize*0.5),
+                        glam::vec2(tilesize*0.5,tilesize*0.8)
+                    ],
+                    graphics::Color::new(1.0,0.0,1.0,1.0)
+                )?,
+                graphics::DrawParam::default()
+            );
+        }
+
         image_canvas.finish(ctx)?;
 
         Ok(image)

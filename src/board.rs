@@ -1,6 +1,11 @@
+use std::borrow::BorrowMut;
+use std::collections::HashMap;
+
+use ggez::GameError;
+use ggez::graphics::InstanceArray;
 use ggez::{
     glam,
-    graphics::{self, Color, Mesh, DrawMode, Canvas},
+    graphics,
     input::mouse::MouseButton,
     Context, GameResult,
 };
@@ -45,15 +50,15 @@ impl Board{
         };
         // TESTCODE PLEASE REMOVE
         board.state.place_tile(TileType::PushTile, 0, 0);
-        board.state.place_tile(TileType::PushTile, 0, 1);
-        board.state.rotate_tile(0,1);
-        board.state.place_tile(TileType::PushTile, 1, 0);
-        board.state.rotate_tile(1,0);
-        board.state.rotate_tile(1,0);
-        board.state.place_tile(TileType::PushTile, 1, 1);
-        board.state.rotate_tile(1,1);
-        board.state.rotate_tile(1,1);
-        board.state.rotate_tile(1,1);
+        // board.state.place_tile(TileType::PushTile, 0, 1);
+        // board.state.rotate_tile(0,1);
+        // board.state.place_tile(TileType::PushTile, 1, 0);
+        // board.state.rotate_tile(1,0);
+        // board.state.rotate_tile(1,0);
+        // board.state.place_tile(TileType::PushTile, 1, 1);
+        // board.state.rotate_tile(1,1);
+        // board.state.rotate_tile(1,1);
+        // board.state.rotate_tile(1,1);
 
         Ok(board)
     }
@@ -62,7 +67,7 @@ impl Board{
         Ok(())
     }
 
-    pub fn draw(&mut self, ctx: &mut Context, out_canvas: &mut Canvas) -> GameResult {
+    pub fn draw(&mut self, ctx: &mut Context, out_canvas: &mut graphics::Canvas) -> GameResult {
         let color_format = ctx.gfx.surface_format();
         let image = graphics::Image::new_canvas_image(
             ctx, color_format,
@@ -72,9 +77,11 @@ impl Board{
         );
         let mut image_canvas = graphics::Canvas::from_image(ctx, image.clone(), BG_COLOR);
 
+        // empty tiles
+        // TODO: don't render empty tiles under filled tiles
         let empty_tile_image = TileType::get_image(
             ctx,
-            TileType::PushTile,
+            TileType::Empty,
             self.canvas.tile_size,
             self.canvas.tile_size * self.canvas.grid_thickness/2.0
         )?;
@@ -97,6 +104,45 @@ impl Board{
             }
         }
         image_canvas.draw(&empty_tile_ia, graphics::DrawParam::default());
+
+        // filled tiles
+        let mut ia_map = HashMap::new();
+        for tiletype in TILETYPES{
+            let empty_tile_image = TileType::get_image(
+                ctx,
+                TileType::PushTile,
+                self.canvas.tile_size,
+                self.canvas.tile_size * self.canvas.grid_thickness/2.0
+            )?;
+
+            let empty_tile_ia = Box::new(graphics::InstanceArray::new(ctx, empty_tile_image));
+            ia_map.insert(tiletype, empty_tile_ia);
+        }
+        for tile in self.state.tiles.iter(){
+            if tile.get_x() >= tilex_min && tile.get_x() <= tilex_max &&
+                tile.get_y() >= tiley_min && tile.get_y() <= tiley_max{
+                let screenpos: graphics::DrawParam = glam::vec2(
+                    tile.get_x() as f32 * self.canvas.tile_size - self.canvas.offset_x,
+                    tile.get_y() as f32 * self.canvas.tile_size - self.canvas.offset_y
+                ).into();
+                if let Some(temp_ia) = ia_map.get_mut(&tile.get_type()){
+                    temp_ia.push(
+                        screenpos.rotation(tile.get_dir().to_rot())
+                    )
+                }else{
+                    return Err(GameError::CustomError(format!("Failed to find InstanceArray for tiletype {:?}", tile.get_type())))
+                }
+            }
+        }
+        for tiletype in TILETYPES{
+            if let Some(temp_ia) = ia_map.get(&tiletype){
+                image_canvas.draw(temp_ia.as_ref(), graphics::DrawParam::default());
+            }else{
+                return Err(GameError::CustomError(format!("Failed to find InstanceArray for tiletype {:?}", tiletype)))
+            }
+        }
+
+
         image_canvas.finish(ctx)?;
 
         out_canvas.draw(&image, glam::vec2(self.canvas.pos.x, self.canvas.pos.y));

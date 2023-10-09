@@ -1,7 +1,9 @@
 pub struct Tile {
-    tiletype: TileType
+    tiletype: TileType,
+    x: i32,
+    y: i32
 }
 
-enum TileType{
+pub enum TileType{
     PushTile
 }

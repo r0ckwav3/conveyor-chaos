@@ -5,6 +5,7 @@ use ggez::{
     event,
     glam::*,
     graphics::{self, Color},
+    input::mouse::MouseButton,
     Context, GameResult,
 };
 
@@ -40,6 +41,21 @@ impl event::EventHandler for MainState {
 
         canvas.finish(ctx)?;
 
+        Ok(())
+    }
+
+    fn mouse_button_down_event(&mut self, ctx: &mut Context, button: MouseButton, x: f32, y: f32) -> GameResult{
+        self.board.mouse_button_down_event(ctx,button,x,y)?;
+        Ok(())
+    }
+
+    fn mouse_button_up_event(&mut self, ctx: &mut Context, button: MouseButton, x: f32, y: f32) -> GameResult{
+        self.board.mouse_button_up_event(ctx,button,x,y)?;
+        Ok(())
+    }
+
+    fn mouse_motion_event(&mut self, ctx: &mut Context, x: f32, y: f32, dx: f32, dy: f32) -> GameResult{
+        self.board.mouse_motion_event(ctx,x,y,dx,dy)?;
         Ok(())
     }
 }

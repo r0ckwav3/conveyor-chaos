@@ -1,11 +1,11 @@
 use ggez::{
-    event,
     glam::vec2,
     graphics::{self, Color, Mesh, DrawMode, Canvas},
+    input::mouse::MouseButton,
     Context, GameResult,
 };
 
-use crate::tile::Tile;
+use crate::tile::{Tile, TileType};
 use crate::block::BlockObject;
 
 const TILE_SIZE: f32 = 100.0;
@@ -54,8 +54,6 @@ impl Board{
     }
 
     pub fn update(&mut self, _ctx: &mut Context) -> GameResult {
-        self.canvas.offset_x += 2.0;
-        // self.canvas.offset_y += 1.0;
         Ok(())
     }
 
@@ -104,6 +102,21 @@ impl Board{
         out_canvas.draw(&image, vec2(self.canvas.pos.x, self.canvas.pos.y));
         Ok(())
     }
+
+    pub fn mouse_button_down_event(&mut self, ctx: &mut Context, button: MouseButton, x: f32, y: f32) -> GameResult{
+        self.canvas.mouse_button_down_event(ctx,button,x,y)?;
+        Ok(())
+    }
+
+    pub fn mouse_button_up_event(&mut self, ctx: &mut Context, button: MouseButton, x: f32, y: f32) -> GameResult{
+        self.canvas.mouse_button_up_event(ctx,button,x,y)?;
+        Ok(())
+    }
+
+    pub fn mouse_motion_event(&mut self, ctx: &mut Context, x: f32, y: f32, dx: f32, dy: f32) -> GameResult{
+        self.canvas.mouse_motion_event(ctx,x,y,dx,dy)?;
+        Ok(())
+    }
 }
 
 impl BoardCanvas{
@@ -118,6 +131,48 @@ impl BoardCanvas{
             offset_x: 0.0,
             offset_y: 0.0
         })
+    }
+
+    pub fn mouse_button_down_event(
+        &mut self,
+        _ctx: &mut Context,
+        button: MouseButton,
+        x: f32,
+        y: f32
+    ) -> GameResult{
+        if self.pos.contains(vec2(x, y)) && button == MouseButton::Left{
+            self.mouse_down = true;
+        }
+        Ok(())
+    }
+
+    pub fn mouse_button_up_event(
+        &mut self,
+        _ctx: &mut Context,
+        button: MouseButton,
+        _x: f32,
+        _y: f32
+    ) -> GameResult{
+        if button == MouseButton::Left{
+            self.mouse_down = false;
+        }
+        Ok(())
+    }
+
+    pub fn mouse_motion_event(
+        &mut self,
+        _ctx: &mut Context,
+        _x: f32,
+        _y: f32,
+        dx: f32,
+        dy: f32
+    ) -> GameResult{
+        if self.mouse_down{
+            // println!("{}, {}", dx,dy);
+            self.offset_x -= dx;
+            self.offset_y -= dy;
+        }
+        Ok(())
     }
 }
 

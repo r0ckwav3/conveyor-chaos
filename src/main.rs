@@ -12,6 +12,7 @@ use ggez::{
 pub mod board;
 pub mod tile;
 pub mod block;
+pub mod constants;
 
 const SCREEN_SIZE: (f32, f32) = (1920.0,1280.0);
 const BOARD_POS: graphics::Rect = graphics::Rect::new(640.0,0.0,1280.0,1280.0);

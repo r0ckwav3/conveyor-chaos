@@ -1,5 +1,5 @@
 use ggez::{
-    glam::vec2,
+    glam,
     graphics::{self, Color, Mesh, DrawMode, Canvas},
     input::mouse::MouseButton,
     Context, GameResult,
@@ -7,13 +7,7 @@ use ggez::{
 
 use crate::tile::{Tile, TileType};
 use crate::block::BlockObject;
-
-const TILE_SIZE: f32 = 100.0;
-const GRID_THICKNESS: f32 = 0.1;
-const BG_COLOR: Color = Color::new(0.2, 0.2, 0.2, 1.0);
-const EMPTY_COLOR: Color = Color::new(0.3, 0.3, 0.3, 1.0);
-
-const ANIMATION_DURATION: f32 = 1.0;
+use crate::constants::*;
 
 enum BoardMode {
     Building,
@@ -30,8 +24,6 @@ struct BoardCanvas {
     pos: graphics::Rect, // where to render it on the screen
     tile_size: f32,
     grid_thickness: f32, // % of tile size
-    bg_color: Color,
-    empty_color: Color,
     mouse_down: bool,
     offset_x: f32, // the top left corner of the screen should show what's at (offset_x, offset_y)
     offset_y: f32
@@ -47,10 +39,23 @@ struct BoardState {
 
 impl Board{
     pub fn new(screenpos: graphics::Rect) -> GameResult<Board> {
-        Ok(Board{
+        let mut board = Board{
             canvas: BoardCanvas::new(screenpos)?,
             state: BoardState::new()?
-        })
+        };
+        // TESTCODE PLEASE REMOVE
+        board.state.place_tile(TileType::PushTile, 0, 0);
+        board.state.place_tile(TileType::PushTile, 0, 1);
+        board.state.rotate_tile(0,1);
+        board.state.place_tile(TileType::PushTile, 1, 0);
+        board.state.rotate_tile(1,0);
+        board.state.rotate_tile(1,0);
+        board.state.place_tile(TileType::PushTile, 1, 1);
+        board.state.rotate_tile(1,1);
+        board.state.rotate_tile(1,1);
+        board.state.rotate_tile(1,1);
+
+        Ok(board)
     }
 
     pub fn update(&mut self, _ctx: &mut Context) -> GameResult {
@@ -65,21 +70,16 @@ impl Board{
             self.canvas.pos.h as u32,
             1
         );
+        let mut image_canvas = graphics::Canvas::from_image(ctx, image.clone(), BG_COLOR);
 
-        let mut image_canvas = graphics::Canvas::from_image(ctx, image.clone(), self.canvas.bg_color);
-        let empty_tile_mesh = Mesh::new_rounded_rectangle(
+        let empty_tile_image = TileType::get_image(
             ctx,
-            DrawMode::fill(),
-            graphics::Rect {
-                x: self.canvas.tile_size * self.canvas.grid_thickness/2.0,
-                y: self.canvas.tile_size * self.canvas.grid_thickness/2.0,
-                w: self.canvas.tile_size * (1.0-self.canvas.grid_thickness),
-                h: self.canvas.tile_size * (1.0-self.canvas.grid_thickness),
-            },
-            self.canvas.tile_size*self.canvas.grid_thickness,
-            self.canvas.empty_color
+            TileType::PushTile,
+            self.canvas.tile_size,
+            self.canvas.tile_size * self.canvas.grid_thickness/2.0
         )?;
-        // let mut instance_array = graphics::InstanceArray::new(ctx, )
+
+        let mut empty_tile_ia = graphics::InstanceArray::new(ctx, empty_tile_image);
 
         let tilex_min = (self.canvas.offset_x/self.canvas.tile_size).floor() as i32;
         let tilex_max = ((self.canvas.offset_x+self.canvas.pos.w)/self.canvas.tile_size).ceil() as i32;
@@ -88,18 +88,18 @@ impl Board{
 
         for tiley in tiley_min..tiley_max {
             for tilex in tilex_min..tilex_max {
-                image_canvas.draw(
-                    &empty_tile_mesh,
-                    vec2(
+                empty_tile_ia.push(
+                    glam::vec2(
                         tilex as f32 * self.canvas.tile_size - self.canvas.offset_x,
                         tiley as f32 * self.canvas.tile_size - self.canvas.offset_y
-                    )
+                    ).into()
                 );
             }
         }
+        image_canvas.draw(&empty_tile_ia, graphics::DrawParam::default());
         image_canvas.finish(ctx)?;
 
-        out_canvas.draw(&image, vec2(self.canvas.pos.x, self.canvas.pos.y));
+        out_canvas.draw(&image, glam::vec2(self.canvas.pos.x, self.canvas.pos.y));
         Ok(())
     }
 
@@ -125,8 +125,6 @@ impl BoardCanvas{
             pos: screenpos,
             tile_size: TILE_SIZE,
             grid_thickness: GRID_THICKNESS,
-            bg_color: BG_COLOR,
-            empty_color: EMPTY_COLOR,
             mouse_down: false,
             offset_x: 0.0,
             offset_y: 0.0
@@ -140,7 +138,7 @@ impl BoardCanvas{
         x: f32,
         y: f32
     ) -> GameResult{
-        if self.pos.contains(vec2(x, y)) && button == MouseButton::Left{
+        if self.pos.contains(glam::vec2(x, y)) && button == MouseButton::Left{
             self.mouse_down = true;
         }
         Ok(())
@@ -189,11 +187,11 @@ impl BoardState{
     }
 
     // returns whether something got removed
-    fn placeTile(&mut self, tiletype: TileType, x: i32, y: i32) -> bool{
+    fn place_tile(&mut self, tiletype: TileType, x: i32, y: i32) -> bool{
         let mut to_remove: Option<usize> = None;
         let newtile = Tile::new(tiletype,x,y);
         for (i, tile) in self.tiles.iter().enumerate(){
-            if newtile.posEq(tile){
+            if newtile.pos_eq(tile){
                 to_remove = Some(i);
             }
         }
@@ -205,5 +203,22 @@ impl BoardState{
         }
 
         to_remove.is_some()
+    }
+
+    // returns false if the rotation failed (typically because there is no tile at x,y)
+    fn rotate_tile(&mut self, x: i32, y: i32) -> bool{
+        let mut to_rotate: Option<usize> = None;
+        for (i, tile) in self.tiles.iter().enumerate(){
+            if tile.get_x() == x && tile.get_y() == y{
+                to_rotate = Some(i);
+            }
+        }
+
+        if let Some(i) = to_rotate{
+            self.tiles[i].rotate();
+            true
+        }else{
+            false
+        }
     }
 }

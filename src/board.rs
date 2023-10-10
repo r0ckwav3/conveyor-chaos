@@ -233,39 +233,49 @@ impl BoardState{
         })
     }
 
-    // returns whether something got removed
-    fn place_tile(&mut self, tiletype: TileType, x: i32, y: i32) -> bool{
-        let mut to_remove: Option<usize> = None;
-        let newtile = Tile::new(tiletype,x,y);
+    // find the index of the tile at a position
+    // returns None if there is no tile
+    fn find_tile(&mut self, x: i32, y: i32) -> Option<usize>{
+        let mut found_index : Option<usize> = None;
         for (i, tile) in self.tiles.iter().enumerate(){
-            if newtile.pos_eq(tile){
-                to_remove = Some(i);
+            if tile.get_x() == x && tile.get_y() == y{
+                found_index = Some(i);
             }
         }
+
+        found_index
+    }
+
+    fn place_tile(&mut self, tiletype: TileType, x: i32, y: i32){
+        let newtile = Tile::new(tiletype,x,y);
+        let to_remove: Option<usize> = self.find_tile(x,y);
 
         if let Some(i) = to_remove{
             self.tiles[i] = newtile;
         }else{
             self.tiles.push(newtile);
         }
-
-        to_remove.is_some()
     }
 
-    // returns false if the rotation failed (typically because there is no tile at x,y)
-    fn rotate_tile(&mut self, x: i32, y: i32) -> bool{
-        let mut to_rotate: Option<usize> = None;
-        for (i, tile) in self.tiles.iter().enumerate(){
-            if tile.get_x() == x && tile.get_y() == y{
-                to_rotate = Some(i);
-            }
-        }
-
-        if let Some(i) = to_rotate{
+    fn rotate_tile(&mut self, x: i32, y: i32){
+        if let Some(i) = self.find_tile(x,y){
             self.tiles[i].rotate();
-            true
+        }
+    }
+
+    // returns false if the tile is not removed (typically because there is no tile at x,y)
+    fn remove_tile(&mut self, x: i32, y: i32){
+        if let Some(i) = self.find_tile(x,y){
+            self.tiles.remove(i);
+        }
+    }
+
+    // cycles between push and empty tiles
+    fn toggle_tile(&mut self, x: i32, y: i32){
+        if let Some(i) = self.find_tile(x,y){
+            self.tiles.remove(i);
         }else{
-            false
+            self.tiles.push(Tile::new(TileType::PushTile,x,y));
         }
     }
 }

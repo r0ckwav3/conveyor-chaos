@@ -31,7 +31,7 @@ impl Tile{
     pub fn new(tiletype: TileType, x: i32, y: i32) -> Tile{
         Tile{
             tiletype,
-            dir: Direction::Up,
+            dir: Direction::Right,
             x,
             y
         }
@@ -138,9 +138,12 @@ impl TileType{
                     ctx,
                     graphics::DrawMode::fill(),
                     &[
-                        glam::vec2(tilesize*0.5,tilesize*0.2),
-                        glam::vec2(tilesize*0.2,tilesize*0.5),
-                        glam::vec2(tilesize*0.5,tilesize*0.8)
+                        glam::vec2(tilesize*0.3,tilesize*0.2),
+                        glam::vec2(tilesize*0.4,tilesize*0.2),
+                        glam::vec2(tilesize*0.8,tilesize*0.5),
+                        glam::vec2(tilesize*0.4,tilesize*0.8),
+                        glam::vec2(tilesize*0.3,tilesize*0.8),
+                        glam::vec2(tilesize*0.7,tilesize*0.5)
                     ],
                     graphics::Color::new(1.0,0.0,1.0,1.0)
                 )?,

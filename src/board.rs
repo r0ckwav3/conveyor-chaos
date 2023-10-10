@@ -13,6 +13,7 @@ use ggez::{
 use crate::tile::{Tile, TileType};
 use crate::block::BlockObject;
 use crate::constants::*;
+use crate::helpers;
 
 enum BoardMode {
     Building,
@@ -50,15 +51,15 @@ impl Board{
         };
         // TESTCODE PLEASE REMOVE
         board.state.place_tile(TileType::PushTile, 0, 0);
-        // board.state.place_tile(TileType::PushTile, 0, 1);
-        // board.state.rotate_tile(0,1);
-        // board.state.place_tile(TileType::PushTile, 1, 0);
-        // board.state.rotate_tile(1,0);
-        // board.state.rotate_tile(1,0);
-        // board.state.place_tile(TileType::PushTile, 1, 1);
-        // board.state.rotate_tile(1,1);
-        // board.state.rotate_tile(1,1);
-        // board.state.rotate_tile(1,1);
+        board.state.place_tile(TileType::PushTile, 0, 1);
+        board.state.rotate_tile(0,1);
+        board.state.place_tile(TileType::PushTile, 1, 0);
+        board.state.rotate_tile(1,0);
+        board.state.rotate_tile(1,0);
+        board.state.place_tile(TileType::PushTile, 1, 1);
+        board.state.rotate_tile(1,1);
+        board.state.rotate_tile(1,1);
+        board.state.rotate_tile(1,1);
 
         Ok(board)
     }
@@ -125,10 +126,12 @@ impl Board{
                     tile.get_x() as f32 * self.canvas.tile_size - self.canvas.offset_x,
                     tile.get_y() as f32 * self.canvas.tile_size - self.canvas.offset_y
                 ).into();
+
+                let mut draw_param = screenpos.rotation(tile.get_dir().to_rot());
+                draw_param = helpers::rot_fix(&mut draw_param,self.canvas.tile_size, self.canvas.tile_size)?;
+
                 if let Some(temp_ia) = ia_map.get_mut(&tile.get_type()){
-                    temp_ia.push(
-                        screenpos.rotation(tile.get_dir().to_rot())
-                    )
+                    temp_ia.push(draw_param);
                 }else{
                     return Err(GameError::CustomError(format!("Failed to find InstanceArray for tiletype {:?}", tile.get_type())))
                 }

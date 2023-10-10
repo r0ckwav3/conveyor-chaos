@@ -134,7 +134,7 @@ impl TileType{
                         glam::vec2(tilesize*0.3,tilesize*0.8),
                         glam::vec2(tilesize*0.7,tilesize*0.5)
                     ],
-                    graphics::Color::new(1.0,0.0,1.0,1.0)
+                    TILE_SYMBOL_COLOR
                 )?,
                 graphics::DrawParam::default()
             );

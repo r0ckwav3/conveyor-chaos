@@ -1,8 +1,6 @@
-use std::borrow::BorrowMut;
 use std::collections::HashMap;
 
 use ggez::GameError;
-use ggez::graphics::InstanceArray;
 use ggez::{
     glam,
     graphics,

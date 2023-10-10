@@ -4,7 +4,7 @@
 use ggez::{
     event,
     glam::*,
-    graphics::{self, Color},
+    graphics,
     input::mouse::MouseButton,
     Context, GameResult,
 };
@@ -22,7 +22,7 @@ struct MainState {
 }
 
 impl MainState {
-    fn new(ctx: &mut Context) -> GameResult<MainState> {
+    fn new(_ctx: &mut Context) -> GameResult<MainState> {
         Ok(MainState {
             board: board::Board::new(BOARD_POS)?
         })

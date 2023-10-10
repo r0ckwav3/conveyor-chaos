@@ -91,17 +91,6 @@ impl Direction {
             Direction::Up    => pi*1.5
         }
     }
-
-    // like usual, pointing right is the default
-    // due to the right/down coordinate system, these are not the normal matricies
-    fn to_mat2(&self) -> glam::Mat2{
-        match self{
-            Direction::Right => glam::Mat2::from_cols_array(&[ 1.0, 0.0, 0.0, 1.0]),
-            Direction::Down  => glam::Mat2::from_cols_array(&[ 0.0,-1.0, 1.0, 0.0]), // want <1,0> -> <0,1>
-            Direction::Left  => glam::Mat2::from_cols_array(&[-1.0, 0.0, 0.0,-1.0]),
-            Direction::Up    => glam::Mat2::from_cols_array(&[ 0.0, 1.0,-1.0, 0.0]),
-        }
-    }
 }
 
 impl TileType{

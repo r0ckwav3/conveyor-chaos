@@ -13,7 +13,7 @@ use ggez::{
 use crate::tile::{Tile, TileType};
 use crate::block::BlockObject;
 use crate::constants::*;
-use crate::helpers;
+use crate::helpers::*;
 
 enum BoardMode {
     Building,
@@ -42,12 +42,6 @@ struct BoardState {
     animation_timer: f32,
     tiles: Vec<Tile>,
     block_objects: Vec<BlockObject>,
-}
-
-#[derive(Clone, Copy)]
-struct BoardPos {
-    x: i32,
-    y: i32
 }
 
 impl Board{
@@ -124,7 +118,7 @@ impl Board{
                 ).into();
 
                 let mut draw_param = screenpos.rotation(tile.get_dir().to_rot());
-                draw_param = helpers::rot_fix(&mut draw_param,self.canvas.tile_size, self.canvas.tile_size)?;
+                draw_param = rot_fix(&mut draw_param,self.canvas.tile_size, self.canvas.tile_size)?;
 
                 if let Some(temp_ia) = ia_map.get_mut(&tile.get_type()){
                     temp_ia.push(draw_param);
@@ -255,7 +249,7 @@ impl BoardState{
     }
 
     fn place_tile(&mut self, tiletype: TileType, pos: BoardPos){
-        let newtile = Tile::new(tiletype, pos.x, pos.y);
+        let newtile = Tile::new(tiletype, pos);
         let to_remove: Option<usize> = self.find_tile(pos);
 
         if let Some(i) = to_remove{
@@ -289,7 +283,7 @@ impl BoardState{
         if let Some(i) = self.find_tile(pos){
             self.tiles.remove(i);
         }else{
-            self.tiles.push(Tile::new(TileType::PushTile,pos.x,pos.y));
+            self.tiles.push(Tile::new(TileType::PushTile,pos));
         }
     }
 }

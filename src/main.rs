@@ -3,7 +3,7 @@
 
 use ggez::{
     event,
-    glam::*,
+    glam,
     graphics,
     input::{mouse::MouseButton, keyboard::KeyInput, keyboard::KeyCode},
     Context, GameResult,
@@ -39,6 +39,7 @@ impl event::EventHandler for MainState {
         let mut canvas = graphics::Canvas::from_frame(ctx, graphics::Color::new(1.0, 0.0, 1.0, 1.0));
 
         self.board.draw(ctx, &mut canvas)?;
+        // canvas.draw(&block::Block::draw(ctx, TILE_SIZE, [[true,true,true],[true,false,true],[true,false,true]])?, glam::vec2(100.0,100.0));
 
         canvas.finish(ctx)?;
 

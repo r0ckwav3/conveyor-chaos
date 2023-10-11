@@ -39,3 +39,9 @@ pub fn rot_fix(dp: &mut DrawParam, w: f32, h:f32) -> GameResult<DrawParam>{
         Err(GameError::CustomError("Cannot use rot_fix on matrix transform".to_string()))
     }
 }
+
+#[derive(Clone, Copy, PartialEq)]
+pub struct BoardPos {
+    pub x: i32,
+    pub y: i32
+}

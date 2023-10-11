@@ -1,3 +1,5 @@
+use crate::helpers::*;
+
 use ggez::{
     glam,
     graphics,
@@ -9,8 +11,7 @@ use crate::constants::*;
 pub struct Tile {
     tiletype: TileType,
     dir: Direction,
-    x: i32,
-    y: i32
+    pos: BoardPos,
 }
 
 #[derive(Clone, Copy)]
@@ -28,30 +29,32 @@ pub enum TileType{
 }
 
 impl Tile{
-    pub fn new(tiletype: TileType, x: i32, y: i32) -> Tile{
+    pub fn new(tiletype: TileType, pos: BoardPos) -> Tile{
         Tile{
             tiletype,
             dir: Direction::Right,
-            x,
-            y
+            pos
         }
     }
 
-    pub fn new_directional(tiletype: TileType, x: i32, y: i32, dir: Direction) -> Tile{
+    pub fn new_directional(tiletype: TileType, pos: BoardPos, dir: Direction) -> Tile{
         Tile{
             tiletype,
             dir,
-            x,
-            y
+            pos
         }
     }
 
+    pub fn get_pos(&self) -> BoardPos{
+        self.pos
+    }
+
     pub fn get_x(&self) -> i32{
-        self.x
+        self.pos.x
     }
 
     pub fn get_y(&self) -> i32{
-        self.y
+        self.pos.y
     }
 
     pub fn get_type(&self) -> TileType{
@@ -63,7 +66,7 @@ impl Tile{
     }
 
     pub fn pos_eq(&self, other: &Tile) -> bool{
-        self.x==other.x && self.y == other.y
+        self.pos.x==other.pos.x && self.pos.y == other.pos.y
     }
 
     pub fn rotate(&mut self){

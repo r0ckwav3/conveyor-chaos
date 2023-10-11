@@ -69,6 +69,10 @@ impl Tile{
     pub fn rotate(&mut self){
         self.dir = self.dir.clockwise();
     }
+
+    pub fn rotate_ccw(&mut self){
+        self.dir = self.dir.counterclockwise();
+    }
 }
 
 impl Direction {
@@ -78,6 +82,15 @@ impl Direction {
             Direction::Down  => Direction::Left,
             Direction::Left  => Direction::Up,
             Direction::Up    => Direction::Right,
+        }
+    }
+
+    fn counterclockwise(&self) -> Direction{
+        match self{
+            Direction::Right => Direction::Up,
+            Direction::Down  => Direction::Right,
+            Direction::Left  => Direction::Down,
+            Direction::Up    => Direction::Left,
         }
     }
 

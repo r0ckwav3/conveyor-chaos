@@ -5,7 +5,8 @@ use ggez::GameError;
 use ggez::{
     glam,
     graphics,
-    input::{mouse::MouseButton, keyboard::KeyInput, keyboard::KeyCode},
+    input::mouse::MouseButton,
+    input::keyboard::{KeyInput, KeyCode, KeyMods},
     Context, GameResult,
 };
 
@@ -197,7 +198,12 @@ impl Board{
     pub fn key_down_event(&mut self, ctx: &mut Context, input: KeyInput, _repeated: bool) -> GameResult {
         if input.keycode == Some(KeyCode::R) {
             let mouse_pos = ctx.mouse.position();
-            self.state.rotate_tile(self.canvas.screen_pos_to_tile(mouse_pos.x, mouse_pos.y));
+            let tile_pos = self.canvas.screen_pos_to_tile(mouse_pos.x, mouse_pos.y);
+            if input.mods.contains(KeyMods::SHIFT){
+                self.state.rotate_tile_ccw(tile_pos);
+            }else{
+                self.state.rotate_tile(tile_pos);
+            }
         }
         Ok(())
     }
@@ -262,6 +268,12 @@ impl BoardState{
     fn rotate_tile(&mut self, pos: BoardPos){
         if let Some(i) = self.find_tile(pos){
             self.tiles[i].rotate();
+        }
+    }
+
+    fn rotate_tile_ccw(&mut self, pos: BoardPos){
+        if let Some(i) = self.find_tile(pos){
+            self.tiles[i].rotate_ccw();
         }
     }
 

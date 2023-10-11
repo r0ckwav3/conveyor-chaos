@@ -5,7 +5,7 @@ use ggez::{
     event,
     glam::*,
     graphics,
-    input::mouse::MouseButton,
+    input::{mouse::MouseButton, keyboard::KeyInput, keyboard::KeyCode},
     Context, GameResult,
 };
 
@@ -57,6 +57,14 @@ impl event::EventHandler for MainState {
 
     fn mouse_motion_event(&mut self, ctx: &mut Context, x: f32, y: f32, dx: f32, dy: f32) -> GameResult{
         self.board.mouse_motion_event(ctx,x,y,dx,dy)?;
+        Ok(())
+    }
+
+    fn key_down_event(&mut self, ctx: &mut Context, input: KeyInput, repeated: bool) -> GameResult {
+        if input.keycode == Some(KeyCode::Escape) {
+            ctx.request_quit();
+        }
+        self.board.key_down_event(ctx, input, repeated);
         Ok(())
     }
 }

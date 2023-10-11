@@ -5,7 +5,7 @@ use ggez::GameError;
 use ggez::{
     glam,
     graphics,
-    input::mouse::MouseButton,
+    input::{mouse::MouseButton, keyboard::KeyInput, keyboard::KeyCode},
     Context, GameResult,
 };
 
@@ -190,6 +190,14 @@ impl Board{
         if self.mouse_down{
             self.canvas.offset_x -= dx;
             self.canvas.offset_y -= dy;
+        }
+        Ok(())
+    }
+
+    pub fn key_down_event(&mut self, ctx: &mut Context, input: KeyInput, _repeated: bool) -> GameResult {
+        if input.keycode == Some(KeyCode::R) {
+            let mouse_pos = ctx.mouse.position();
+            self.state.rotate_tile(self.canvas.screen_pos_to_tile(mouse_pos.x, mouse_pos.y));
         }
         Ok(())
     }

@@ -1,10 +1,14 @@
+use std::time::Duration;
+
 use ggez::graphics::{Color, Rect};
 
 use crate::tile::TileType;
 
-// window
+// window and other setup
 pub const SCREEN_SIZE: (f32, f32) = (1920.0,1280.0);
 pub const BOARD_POS: Rect = Rect::new(640.0,0.0,1280.0,1280.0);
+pub const CLICK_TIME_THRESHOLD: Duration = Duration::from_millis(250);
+
 
 // graphics
 pub const TILE_SIZE: f32 = 100.0;

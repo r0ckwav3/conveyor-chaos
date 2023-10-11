@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::time::Duration;
 
 use ggez::GameError;
 use ggez::{
@@ -20,6 +21,8 @@ enum BoardMode {
 }
 
 pub struct Board {
+    mouse_down: bool,
+    click_time: Duration,
     canvas: BoardCanvas,
     state: BoardState
 }
@@ -28,7 +31,6 @@ struct BoardCanvas {
     pos: graphics::Rect, // where to render it on the screen
     tile_size: f32,
     grid_thickness: f32, // % of tile size
-    mouse_down: bool,
     offset_x: f32, // the top left corner of the screen should show what's at (offset_x, offset_y)
     offset_y: f32
 }
@@ -41,25 +43,20 @@ struct BoardState {
     block_objects: Vec<BlockObject>,
 }
 
+#[derive(Clone, Copy)]
+struct BoardPos {
+    x: i32,
+    y: i32
+}
+
 impl Board{
     pub fn new(screenpos: graphics::Rect) -> GameResult<Board> {
-        let mut board = Board{
+        Ok(Board{
+            mouse_down: false,
+            click_time: Duration::ZERO,
             canvas: BoardCanvas::new(screenpos)?,
             state: BoardState::new()?
-        };
-        // TESTCODE PLEASE REMOVE
-        board.state.place_tile(TileType::PushTile, 0, 0);
-        board.state.place_tile(TileType::PushTile, 0, 1);
-        board.state.rotate_tile(0,1);
-        board.state.place_tile(TileType::PushTile, 1, 0);
-        board.state.rotate_tile(1,0);
-        board.state.rotate_tile(1,0);
-        board.state.place_tile(TileType::PushTile, 1, 1);
-        board.state.rotate_tile(1,1);
-        board.state.rotate_tile(1,1);
-        board.state.rotate_tile(1,1);
-
-        Ok(board)
+        })
     }
 
     pub fn update(&mut self, _ctx: &mut Context) -> GameResult {
@@ -150,56 +147,34 @@ impl Board{
         Ok(())
     }
 
-    pub fn mouse_button_down_event(&mut self, ctx: &mut Context, button: MouseButton, x: f32, y: f32) -> GameResult{
-        self.canvas.mouse_button_down_event(ctx,button,x,y)?;
-        Ok(())
-    }
-
-    pub fn mouse_button_up_event(&mut self, ctx: &mut Context, button: MouseButton, x: f32, y: f32) -> GameResult{
-        self.canvas.mouse_button_up_event(ctx,button,x,y)?;
-        Ok(())
-    }
-
-    pub fn mouse_motion_event(&mut self, ctx: &mut Context, x: f32, y: f32, dx: f32, dy: f32) -> GameResult{
-        self.canvas.mouse_motion_event(ctx,x,y,dx,dy)?;
-        Ok(())
-    }
-}
-
-impl BoardCanvas{
-    fn new(screenpos: graphics::Rect) -> GameResult<BoardCanvas> {
-        Ok(BoardCanvas{
-            pos: screenpos,
-            tile_size: TILE_SIZE,
-            grid_thickness: GRID_THICKNESS,
-            mouse_down: false,
-            offset_x: 0.0,
-            offset_y: 0.0
-        })
-    }
-
     pub fn mouse_button_down_event(
         &mut self,
-        _ctx: &mut Context,
+        ctx: &mut Context,
         button: MouseButton,
         x: f32,
         y: f32
     ) -> GameResult{
-        if self.pos.contains(glam::vec2(x, y)) && button == MouseButton::Left{
+        if self.canvas.pos.contains(glam::vec2(x, y)) && button == MouseButton::Left{
             self.mouse_down = true;
+            self.click_time = ctx.time.time_since_start();
         }
         Ok(())
     }
 
     pub fn mouse_button_up_event(
         &mut self,
-        _ctx: &mut Context,
+        ctx: &mut Context,
         button: MouseButton,
-        _x: f32,
-        _y: f32
+        x: f32,
+        y: f32
     ) -> GameResult{
         if button == MouseButton::Left{
             self.mouse_down = false;
+            let time_since_click = ctx.time.time_since_start() - self.click_time;
+            println!("thing {}", time_since_click.as_millis());
+            if time_since_click < CLICK_TIME_THRESHOLD{
+                self.state.toggle_tile(self.canvas.screen_pos_to_tile(x, y))
+            }
         }
         Ok(())
     }
@@ -213,14 +188,33 @@ impl BoardCanvas{
         dy: f32
     ) -> GameResult{
         if self.mouse_down{
-            // println!("{}, {}", dx,dy);
-            self.offset_x -= dx;
-            self.offset_y -= dy;
+            self.canvas.offset_x -= dx;
+            self.canvas.offset_y -= dy;
         }
         Ok(())
     }
 }
 
+impl BoardCanvas{
+    fn new(screenpos: graphics::Rect) -> GameResult<BoardCanvas> {
+        Ok(BoardCanvas{
+            pos: screenpos,
+            tile_size: TILE_SIZE,
+            grid_thickness: GRID_THICKNESS,
+            offset_x: 0.0,
+            offset_y: 0.0
+        })
+    }
+
+    fn screen_pos_to_tile(&self, x: f32, y: f32) -> BoardPos{
+        let true_x = x + self.offset_x - self.pos.x;
+        let true_y = y + self.offset_y - self.pos.y;
+        BoardPos{
+            x: (true_x/self.tile_size).floor() as i32,
+            y: (true_y/self.tile_size).floor() as i32
+        }
+    }
+}
 
 impl BoardState{
     fn new() -> GameResult<BoardState> {
@@ -235,10 +229,10 @@ impl BoardState{
 
     // find the index of the tile at a position
     // returns None if there is no tile
-    fn find_tile(&mut self, x: i32, y: i32) -> Option<usize>{
+    fn find_tile(&mut self, pos: BoardPos) -> Option<usize>{
         let mut found_index : Option<usize> = None;
         for (i, tile) in self.tiles.iter().enumerate(){
-            if tile.get_x() == x && tile.get_y() == y{
+            if tile.get_x() == pos.x && tile.get_y() == pos.y{
                 found_index = Some(i);
             }
         }
@@ -246,9 +240,9 @@ impl BoardState{
         found_index
     }
 
-    fn place_tile(&mut self, tiletype: TileType, x: i32, y: i32){
-        let newtile = Tile::new(tiletype,x,y);
-        let to_remove: Option<usize> = self.find_tile(x,y);
+    fn place_tile(&mut self, tiletype: TileType, pos: BoardPos){
+        let newtile = Tile::new(tiletype, pos.x, pos.y);
+        let to_remove: Option<usize> = self.find_tile(pos);
 
         if let Some(i) = to_remove{
             self.tiles[i] = newtile;
@@ -257,25 +251,25 @@ impl BoardState{
         }
     }
 
-    fn rotate_tile(&mut self, x: i32, y: i32){
-        if let Some(i) = self.find_tile(x,y){
+    fn rotate_tile(&mut self, pos: BoardPos){
+        if let Some(i) = self.find_tile(pos){
             self.tiles[i].rotate();
         }
     }
 
     // returns false if the tile is not removed (typically because there is no tile at x,y)
-    fn remove_tile(&mut self, x: i32, y: i32){
-        if let Some(i) = self.find_tile(x,y){
+    fn remove_tile(&mut self, pos: BoardPos){
+        if let Some(i) = self.find_tile(pos){
             self.tiles.remove(i);
         }
     }
 
     // cycles between push and empty tiles
-    fn toggle_tile(&mut self, x: i32, y: i32){
-        if let Some(i) = self.find_tile(x,y){
+    fn toggle_tile(&mut self, pos: BoardPos){
+        if let Some(i) = self.find_tile(pos){
             self.tiles.remove(i);
         }else{
-            self.tiles.push(Tile::new(TileType::PushTile,x,y));
+            self.tiles.push(Tile::new(TileType::PushTile,pos.x,pos.y));
         }
     }
 }

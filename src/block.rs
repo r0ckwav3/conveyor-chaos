@@ -1,6 +1,7 @@
 use ggez::{
     glam,
     graphics,
+    GameError,
     Context, GameResult
 };
 
@@ -12,23 +13,115 @@ pub struct Block {
 }
 
 pub struct BlockObject{
-    blocks: Vec<Block>
+    blocks: Vec<Block>,
+    image_cache: Option<graphics::Image>,
+    top_left: Option<BoardPos>
 }
 
 impl BlockObject{
     pub fn new() -> BlockObject{
         BlockObject{
-            blocks: Vec::new()
+            blocks: Vec::new(),
+            image_cache: None,
+            top_left: None
         }
     }
 
     pub fn from_blocklist(blocks: Vec<Block>) -> BlockObject{
         BlockObject{
-            blocks
+            blocks,
+            image_cache: None,
+            top_left: None
         }
     }
 
     // pub fn merge(a:BlockObject, b:BlockObject) -> BlockObject{}
+
+    fn generate_image(&mut self, ctx: &mut Context, tilesize: f32) -> GameResult{
+        if self.blocks.len() == 0{
+            return Err(GameError::RenderError("Cannot render blockobject with no blocks".to_string()));
+        }
+        // find the bounds
+        let mut xmin = self.blocks[0].pos.x;
+        let mut ymin = self.blocks[0].pos.y;
+        let mut xmax = self.blocks[0].pos.x;
+        let mut ymax = self.blocks[0].pos.y;
+        for block in self.blocks.iter(){
+            if block.pos.x < xmin{
+                xmin = block.pos.x;
+            }
+            if block.pos.y < ymin{
+                ymin = block.pos.y;
+            }
+            if block.pos.x > xmax{
+                xmax = block.pos.x;
+            }
+            if block.pos.y > ymax{
+                ymax = block.pos.y;
+            }
+        }
+
+        let grid_w = 1+xmax-xmin;
+        let grid_h = 1+ymax-ymin;
+        let canvas_w = tilesize*grid_w as f32;
+        let canvas_h = tilesize*grid_h as f32;
+
+        let color_format = ctx.gfx.surface_format();
+        let image = graphics::Image::new_canvas_image(
+            ctx, color_format,
+            canvas_w.ceil() as u32,
+            canvas_h.ceil() as u32,
+            1
+        );
+        let mut image_canvas = graphics::Canvas::from_image(ctx, image.clone(), graphics::Color::from_rgba(0,0,0,0));
+        // find the locations of all blocks
+        let mut block_grid: Vec<Vec<bool>> = Vec::new();
+        block_grid.resize(grid_h as usize, Vec::new());
+        for i in 0..block_grid.len(){
+            block_grid[i].resize(grid_w as usize, false);
+        }
+        for block in self.blocks.iter(){
+            block_grid[(block.pos.y-ymin) as usize][(block.pos.x-xmin) as usize] = true;
+        }
+
+        // this does a bit more computation than strictly neccesary
+        for x in 0..grid_w{
+            for y in 0..grid_h{
+                // we're reusing a lot of data between each loop here
+                let mut nhood = [[false; 3]; 3];
+                for x2 in x-1..x+2{
+                    for y2 in y-1..y+2{
+                        if x2 < 0 || x2 >= grid_w || y2 < 0 || y2 >= grid_h{
+                            continue
+                        }
+                        nhood[(y2-y+1) as usize][(x2-x+1) as usize] = block_grid[y2 as usize][x2 as usize];
+                    }
+                }
+                // println!("nhood of {}, {}: {:?}", x, y, nhood);
+                let block_image = Block::draw(ctx, tilesize, nhood)?;
+                image_canvas.draw(
+                    &block_image,
+                    glam::vec2(x as f32 * tilesize, y as f32 * tilesize)
+                )
+            }
+        }
+
+        image_canvas.finish(ctx)?;
+
+        self.top_left = Some(BoardPos{x:xmin, y:ymin});
+        self.image_cache = Some(image);
+        Ok(())
+    }
+
+    pub fn draw(&mut self, ctx: &mut Context, tilesize: f32) -> GameResult<graphics::Image>{
+        if let Some(image) = self.image_cache.clone(){
+            Ok(image)
+        }else{
+            self.generate_image(ctx, tilesize)?;
+            let image = self.image_cache.clone().expect("Failed to cache image");
+            Ok(image)
+        }
+    }
 }
 
 impl Block{

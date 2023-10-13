@@ -15,7 +15,8 @@ pub struct Block {
 pub struct BlockObject{
     blocks: Vec<Block>,
     image_cache: Option<graphics::Image>,
-    top_left: Option<BoardPos>
+    top_left: Option<BoardPos>,
+    bottom_right: Option<BoardPos>
 }
 
 impl BlockObject{
@@ -23,7 +24,8 @@ impl BlockObject{
         BlockObject{
             blocks: Vec::new(),
             image_cache: None,
-            top_left: None
+            top_left: None,
+            bottom_right: None
         }
     }
 
@@ -31,13 +33,14 @@ impl BlockObject{
         BlockObject{
             blocks,
             image_cache: None,
-            top_left: None
+            top_left: None,
+            bottom_right: None
         }
     }
 
     // pub fn merge(a:BlockObject, b:BlockObject) -> BlockObject{}
 
-    fn generate_image(&mut self, ctx: &mut Context, tilesize: f32) -> GameResult{
+    fn generate_bounds(&mut self) -> GameResult{
         if self.blocks.len() == 0{
             return Err(GameError::RenderError("Cannot render blockobject with no blocks".to_string()));
         }
@@ -61,8 +64,25 @@ impl BlockObject{
             }
         }
 
-        let grid_w = 1+xmax-xmin;
-        let grid_h = 1+ymax-ymin;
+        self.top_left = Some(BoardPos{x:xmin, y:ymin});
+        self.bottom_right = Some(BoardPos{x:xmax, y:ymax});
+        Ok(())
+    }
+
+    // most of the time draw will do this automatically, but you can call it manually if you want,
+    fn generate_image(&mut self, ctx: &mut Context, tilesize: f32) -> GameResult{
+        if self.blocks.len() == 0{
+            return Err(GameError::RenderError("Cannot render blockobject with no blocks".to_string()));
+        }
+        if let None = self.top_left{
+            self.generate_bounds();
+        }
+
+        let br = self.bottom_right.expect("Failed to cache bounds");
+        let tl = self.top_left.expect("Failed to cache bounds");
+
+        let grid_w = 1 + br.x - tl.x;
+        let grid_h = 1 + br.y - tl.y;
         let canvas_w = tilesize*grid_w as f32;
         let canvas_h = tilesize*grid_h as f32;
 
@@ -81,7 +101,7 @@ impl BlockObject{
             block_grid[i].resize(grid_w as usize, false);
         }
         for block in self.blocks.iter(){
-            block_grid[(block.pos.y-ymin) as usize][(block.pos.x-xmin) as usize] = true;
+            block_grid[(block.pos.y-tl.y) as usize][(block.pos.x-tl.x) as usize] = true;
         }
 
         // this does a bit more computation than strictly neccesary
@@ -108,7 +128,6 @@ impl BlockObject{
 
         image_canvas.finish(ctx)?;
 
-        self.top_left = Some(BoardPos{x:xmin, y:ymin});
         self.image_cache = Some(image);
         Ok(())
     }
@@ -120,6 +139,16 @@ impl BlockObject{
             self.generate_image(ctx, tilesize)?;
             let image = self.image_cache.clone().expect("Failed to cache image");
             Ok(image)
+        }
+    }
+
+    pub fn get_top_left(&mut self) -> GameResult<BoardPos>{
+        if let Some(pos) = self.top_left{
+            Ok(pos)
+        }else{
+            self.generate_bounds()?;
+            let pos = self.top_left.expect("Failed to cache bounds");
+            Ok(pos)
         }
     }
 }

@@ -11,7 +11,7 @@ use ggez::{
 };
 
 use crate::tile::{Tile, TileType};
-use crate::block::BlockObject;
+use crate::block::{Block, BlockObject};
 use crate::constants::*;
 use crate::helpers::*;
 
@@ -46,12 +46,29 @@ struct BoardState {
 
 impl Board{
     pub fn new(screenpos: graphics::Rect) -> GameResult<Board> {
-        Ok(Board{
+        let mut board = Board{
             mouse_down: false,
             click_time: Duration::ZERO,
             canvas: BoardCanvas::new(screenpos)?,
             state: BoardState::new()?
-        })
+        };
+        let test_bo = BlockObject::from_blocklist(vec![
+            Block::new(BoardPos{x: 0, y: 0}),
+            Block::new(BoardPos{x: 1, y: 0}),
+            Block::new(BoardPos{x: 2, y: 0}),
+            Block::new(BoardPos{x: 3, y: 0}),
+            Block::new(BoardPos{x: 3, y: 1}),
+            Block::new(BoardPos{x: 3, y: 2}),
+            Block::new(BoardPos{x: 3, y: 3}),
+            Block::new(BoardPos{x: 2, y: 3}),
+            Block::new(BoardPos{x: 1, y: 3}),
+            Block::new(BoardPos{x: 1, y: 2}),
+            Block::new(BoardPos{x: 0, y: 2}),
+            Block::new(BoardPos{x: 0, y: 1}),
+            Block::new(BoardPos{x: 0, y: -1}),
+        ]);
+        board.state.block_objects.push(test_bo);
+        Ok(board)
     }
 
     pub fn update(&mut self, _ctx: &mut Context) -> GameResult {
@@ -133,6 +150,17 @@ impl Board{
             }else{
                 return Err(GameError::CustomError(format!("Failed to find InstanceArray for tiletype {:?}", tiletype)))
             }
+        }
+
+        // blocks
+        for block_object in self.state.block_objects.iter_mut(){
+            let bo_image = block_object.draw(ctx, self.canvas.tile_size)?;
+            let bo_pos = block_object.get_top_left()?;
+            let screenpos: graphics::DrawParam = glam::vec2(
+                bo_pos.x as f32 * self.canvas.tile_size - self.canvas.offset_x,
+                bo_pos.y as f32 * self.canvas.tile_size - self.canvas.offset_y
+            ).into();
+            image_canvas.draw(&bo_image, screenpos);
         }
 
 

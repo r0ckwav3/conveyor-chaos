@@ -36,24 +36,6 @@ impl event::EventHandler for MainState {
         let mut canvas = graphics::Canvas::from_frame(ctx, graphics::Color::new(1.0, 0.0, 1.0, 1.0));
 
         self.board.draw(ctx, &mut canvas)?;
-        // canvas.draw(&block::Block::draw(ctx, TILE_SIZE, [[true,true,true],[true,false,true],[true,false,true]])?, glam::vec2(100.0,100.0));
-        let mut test_bo = block::BlockObject::from_blocklist(vec![
-            block::Block::new(helpers::BoardPos{x: 0, y: 0}),
-            block::Block::new(helpers::BoardPos{x: 1, y: 0}),
-            block::Block::new(helpers::BoardPos{x: 2, y: 0}),
-            block::Block::new(helpers::BoardPos{x: 3, y: 0}),
-            block::Block::new(helpers::BoardPos{x: 3, y: 1}),
-            block::Block::new(helpers::BoardPos{x: 3, y: 2}),
-            block::Block::new(helpers::BoardPos{x: 3, y: 3}),
-            block::Block::new(helpers::BoardPos{x: 2, y: 3}),
-            block::Block::new(helpers::BoardPos{x: 1, y: 3}),
-            block::Block::new(helpers::BoardPos{x: 1, y: 2}),
-            block::Block::new(helpers::BoardPos{x: 0, y: 2}),
-            block::Block::new(helpers::BoardPos{x: 0, y: 1}),
-            block::Block::new(helpers::BoardPos{x: 0, y: -1}),
-        ]);
-
-        canvas.draw(&test_bo.draw(ctx, TILE_SIZE)?, glam::vec2(0.0,0.0));
 
         canvas.finish(ctx)?;
 

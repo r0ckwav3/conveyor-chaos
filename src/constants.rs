@@ -19,6 +19,7 @@ pub const BG_COLOR: Color = Color::new(0.2, 0.2, 0.2, 1.0);
 pub const TILE_BG_COLOR: Color = Color::new(0.3, 0.3, 0.3, 1.0);
 pub const TILE_SYMBOL_COLOR: Color = Color::new(0.1, 0.9, 1.0, 1.0);
 pub const BLOCK_COLOR: Color = Color::new(0.9, 0.9, 0.9, 1.0);
+pub const BLOCK_INNER_COLOR: Color = Color::new(0.8, 0.8, 0.8, 1.0);
 
 // animation
 pub const ANIMATION_DURATION: f32 = 1.0;

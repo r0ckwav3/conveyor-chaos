@@ -52,6 +52,7 @@ impl Board{
             canvas: BoardCanvas::new(screenpos)?,
             state: BoardState::new()?
         };
+        // TEST CODE PLEASE REMOVE
         let test_bo = BlockObject::from_blocklist(vec![
             Block::new(BoardPos{x: 0, y: 0}),
             Block::new(BoardPos{x: 1, y: 0}),
@@ -68,6 +69,7 @@ impl Board{
             Block::new(BoardPos{x: 0, y: -1}),
         ]);
         board.state.block_objects.push(test_bo);
+
         Ok(board)
     }
 
@@ -194,7 +196,7 @@ impl Board{
         if button == MouseButton::Left{
             self.mouse_down = false;
             let time_since_click = ctx.time.time_since_start() - self.click_time;
-            println!("thing {}", time_since_click.as_millis());
+            // println!("thing {}", time_since_click.as_millis());
             if time_since_click < CLICK_TIME_THRESHOLD{
                 self.state.toggle_tile(self.canvas.screen_pos_to_tile(x, y))
             }

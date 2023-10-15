@@ -104,3 +104,5 @@ Set 2:
  * click on product or input:
    * remove it from the board if it exists
    * select it
+
+I'm currently leaning towards set 2

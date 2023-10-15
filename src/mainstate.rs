@@ -5,17 +5,28 @@ use ggez::{
     Context, GameResult,
 };
 
-use crate::board;
+use crate::board::Board;
+use crate::block::{BlockObjectIO, BlockObject, Block};
+use crate::sidebar::Sidebar;
+use crate::helpers::*;
 use crate::constants::*;
 
 pub struct MainState {
-    board: board::Board
+    board: Board,
+    sidebar: Sidebar
 }
 
 impl MainState {
     pub fn new(_ctx: &mut Context) -> GameResult<MainState> {
+        // TEMPCODE REMOVE EVENTUALLY
+        let blockobjects = vec![
+            BlockObjectIO{blockobject: BlockObject::from_blocklist(vec![Block::new(BoardPos{x: 0, y: 0}), Block::new(BoardPos{x: 0, y: 1})]), input: true},
+            BlockObjectIO{blockobject: BlockObject::from_blocklist(vec![Block::new(BoardPos{x: 0, y: 0})]), input: false},
+            BlockObjectIO{blockobject: BlockObject::from_blocklist(vec![Block::new(BoardPos{x: 0, y: 0})]), input: false}
+        ];
         Ok(MainState {
-            board: board::Board::new(BOARD_POS)?
+            board: Board::new(BOARD_POS),
+            sidebar: Sidebar::new(SIDEBAR_POS, &blockobjects)?
         })
     }
 }
@@ -30,6 +41,7 @@ impl event::EventHandler for MainState {
         let mut canvas = graphics::Canvas::from_frame(ctx, graphics::Color::new(1.0, 0.0, 1.0, 1.0));
 
         self.board.draw(ctx, &mut canvas)?;
+        self.sidebar.draw(ctx, &mut canvas)?;
 
         canvas.finish(ctx)?;
 

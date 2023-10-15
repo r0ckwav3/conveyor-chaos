@@ -1,13 +1,12 @@
 use std::collections::HashMap;
 use std::time::Duration;
 
-use ggez::GameError;
 use ggez::{
     glam,
     graphics,
     input::mouse::MouseButton,
     input::keyboard::{KeyInput, KeyCode, KeyMods},
-    Context, GameResult,
+    Context, GameResult, GameError
 };
 
 use crate::tile::{Tile, TileType};
@@ -41,36 +40,17 @@ struct BoardState {
     animation_duration: f32,
     animation_timer: f32,
     tiles: Vec<Tile>,
-    block_objects: Vec<BlockObject>,
+    blockobjects: Vec<BlockObject>,
 }
 
 impl Board{
-    pub fn new(screenpos: graphics::Rect) -> GameResult<Board> {
-        let mut board = Board{
+    pub fn new(screenpos: graphics::Rect) -> Board {
+        Board{
             mouse_down: false,
             click_time: Duration::ZERO,
-            canvas: BoardCanvas::new(screenpos)?,
-            state: BoardState::new()?
-        };
-        // TEST CODE PLEASE REMOVE
-        let test_bo = BlockObject::from_blocklist(vec![
-            Block::new(BoardPos{x: 0, y: 0}),
-            Block::new(BoardPos{x: 1, y: 0}),
-            Block::new(BoardPos{x: 2, y: 0}),
-            Block::new(BoardPos{x: 3, y: 0}),
-            Block::new(BoardPos{x: 3, y: 1}),
-            Block::new(BoardPos{x: 3, y: 2}),
-            Block::new(BoardPos{x: 3, y: 3}),
-            Block::new(BoardPos{x: 2, y: 3}),
-            Block::new(BoardPos{x: 1, y: 3}),
-            Block::new(BoardPos{x: 1, y: 2}),
-            Block::new(BoardPos{x: 0, y: 2}),
-            Block::new(BoardPos{x: 0, y: 1}),
-            Block::new(BoardPos{x: 0, y: -1}),
-        ]);
-        board.state.block_objects.push(test_bo);
-
-        Ok(board)
+            canvas: BoardCanvas::new(screenpos),
+            state: BoardState::new()
+        }
     }
 
     pub fn update(&mut self, _ctx: &mut Context) -> GameResult {
@@ -85,7 +65,7 @@ impl Board{
             self.canvas.pos.h as u32,
             1
         );
-        let mut image_canvas = graphics::Canvas::from_image(ctx, image.clone(), BG_COLOR);
+        let mut image_canvas = graphics::Canvas::from_image(ctx, image.clone(), BOARD_BG_COLOR);
 
         // empty tiles
         // TODO: don't render empty tiles under filled tiles
@@ -155,9 +135,9 @@ impl Board{
         }
 
         // blocks
-        for block_object in self.state.block_objects.iter_mut(){
-            let bo_image = block_object.draw(ctx, self.canvas.tile_size)?;
-            let bo_pos = block_object.get_top_left()?;
+        for blockobject in self.state.blockobjects.iter_mut(){
+            let bo_image = blockobject.draw(ctx, self.canvas.tile_size)?;
+            let bo_pos = blockobject.get_top_left()?;
             let screenpos: graphics::DrawParam = glam::vec2(
                 bo_pos.x as f32 * self.canvas.tile_size - self.canvas.offset_x,
                 bo_pos.y as f32 * self.canvas.tile_size - self.canvas.offset_y
@@ -234,14 +214,14 @@ impl Board{
 }
 
 impl BoardCanvas{
-    fn new(screenpos: graphics::Rect) -> GameResult<BoardCanvas> {
-        Ok(BoardCanvas{
+    fn new(screenpos: graphics::Rect) -> BoardCanvas {
+        BoardCanvas{
             pos: screenpos,
             tile_size: TILE_SIZE,
             grid_thickness: GRID_THICKNESS,
             offset_x: 0.0,
             offset_y: 0.0
-        })
+        }
     }
 
     fn screen_pos_to_tile(&self, x: f32, y: f32) -> BoardPos{
@@ -255,14 +235,14 @@ impl BoardCanvas{
 }
 
 impl BoardState{
-    fn new() -> GameResult<BoardState> {
-        Ok(BoardState{
+    fn new() -> BoardState {
+        BoardState{
             mode: BoardMode::Building,
             animation_duration: ANIMATION_DURATION,
             animation_timer: 0.0,
             tiles: Vec::new(),
-            block_objects: Vec::new(),
-        })
+            blockobjects: Vec::new(),
+        }
     }
 
     // find the index of the tile at a position

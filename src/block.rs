@@ -8,15 +8,23 @@ use ggez::{
 use crate::helpers::*;
 use crate::constants::*;
 
+#[derive(Copy, Clone)]
 pub struct Block {
     pos: BoardPos
 }
 
+#[derive(Clone)]
 pub struct BlockObject{
     blocks: Vec<Block>,
     image_cache: Option<graphics::Image>,
     top_left: Option<BoardPos>,
     bottom_right: Option<BoardPos>
+}
+
+#[derive(Clone)]
+pub struct BlockObjectIO{
+    pub blockobject: BlockObject,
+    pub input: bool // true -> input, false -> output
 }
 
 impl BlockObject{
@@ -151,6 +159,16 @@ impl BlockObject{
             Ok(pos)
         }
     }
+
+    pub fn get_bottom_right(&mut self) -> GameResult<BoardPos>{
+        if let Some(pos) = self.bottom_right{
+            Ok(pos)
+        }else{
+            self.generate_bounds()?;
+            let pos = self.bottom_right.expect("Failed to cache bounds");
+            Ok(pos)
+        }
+    }
 }
 
 impl Block{
@@ -181,7 +199,7 @@ impl Block{
             ctx, graphics::DrawMode::fill(),
             graphics::Rect::new(0.0, 0.0, tilesize, tilesize),
             tilesize*BLOCK_ROUNDNESS,
-            graphics::Color::new(0.0, 0.0, 0.0, 0.0)
+            TRANSPARENT_COLOR
         )?;
 
         let corner_mesh = graphics::Mesh::new_rectangle(

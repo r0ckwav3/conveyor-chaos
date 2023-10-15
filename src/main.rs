@@ -8,6 +8,7 @@ pub mod block;
 pub mod constants;
 pub mod helpers;
 pub mod mainstate;
+pub mod sidebar;
 
 pub fn main() -> GameResult {
     let cb = ggez::ContextBuilder::new("manufacturing", "r0ckwav3")

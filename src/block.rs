@@ -75,7 +75,7 @@ impl BlockObject{
             return Err(GameError::RenderError("Cannot render blockobject with no blocks".to_string()));
         }
         if let None = self.top_left{
-            self.generate_bounds();
+            self.generate_bounds()?;
         }
 
         let br = self.bottom_right.expect("Failed to cache bounds");

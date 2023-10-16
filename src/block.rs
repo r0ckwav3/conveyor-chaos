@@ -13,13 +13,15 @@ pub struct Block {
     pos: BoardPos
 }
 
-#[derive(Clone)]
+// we only use id during the building phase, to ensure only one of each input or output is in the build
+// the id -1 is allowed to have multiple copies
 pub struct BlockObject{
     blocks: Vec<Block>,
     image_cache: Option<graphics::Image>,
     top_left: Option<BoardPos>,
     bottom_right: Option<BoardPos>,
-    mode: BlockObjectMode
+    mode: BlockObjectMode,
+    id: i32
 }
 
 #[derive(Copy, Clone)]
@@ -36,7 +38,8 @@ impl BlockObject{
             image_cache: None,
             top_left: None,
             bottom_right: None,
-            mode: BlockObjectMode::Processing
+            mode: BlockObjectMode::Processing,
+            id: -1
         }
     }
 
@@ -46,11 +49,57 @@ impl BlockObject{
             image_cache: None,
             top_left: None,
             bottom_right: None,
-            mode
+            mode,
+            id: -1
         }
     }
 
     // pub fn merge(a:BlockObject, b:BlockObject) -> BlockObject{}
+
+    pub fn shift(&mut self, dx: i32, dy: i32){
+        for block in self.blocks.iter_mut(){
+            block.shift(dx, dy);
+        }
+        let _ = self.generate_bounds();
+    }
+
+    pub fn draw(&mut self, ctx: &mut Context, tilesize: f32) -> GameResult<graphics::Image>{
+        if let Some(image) = self.image_cache.clone(){
+            Ok(image)
+        }else{
+            self.generate_image(ctx, tilesize)?;
+            let image = self.image_cache.clone().expect("Failed to cache image");
+            Ok(image)
+        }
+    }
+
+    pub fn get_top_left(&mut self) -> GameResult<BoardPos>{
+        if let Some(pos) = self.top_left{
+            Ok(pos)
+        }else{
+            self.generate_bounds()?;
+            let pos = self.top_left.expect("Failed to cache bounds");
+            Ok(pos)
+        }
+    }
+
+    pub fn get_bottom_right(&mut self) -> GameResult<BoardPos>{
+        if let Some(pos) = self.bottom_right{
+            Ok(pos)
+        }else{
+            self.generate_bounds()?;
+            let pos = self.bottom_right.expect("Failed to cache bounds");
+            Ok(pos)
+        }
+    }
+
+    pub fn get_id(&self) -> i32{
+        return self.id;
+    }
+
+    pub fn set_id(&mut self, id: i32){
+        return self.id = id;
+    }
 
     fn generate_bounds(&mut self) -> GameResult{
         if self.blocks.len() == 0{
@@ -147,33 +196,38 @@ impl BlockObject{
         Ok(())
     }
 
-    pub fn draw(&mut self, ctx: &mut Context, tilesize: f32) -> GameResult<graphics::Image>{
-        if let Some(image) = self.image_cache.clone(){
-            Ok(image)
-        }else{
-            self.generate_image(ctx, tilesize)?;
-            let image = self.image_cache.clone().expect("Failed to cache image");
-            Ok(image)
-        }
-    }
+    pub fn has_overlap(&mut self, other: &mut Self) -> bool{
+        let zeropos = BoardPos{x:0,y:0};
+        let stl = self.get_top_left().unwrap_or(zeropos);
+        let sbr = self.get_bottom_right().unwrap_or(zeropos);
+        let otl = other.get_top_left().unwrap_or(zeropos);
+        let obr = other.get_bottom_right().unwrap_or(zeropos);
+        let xoverlap = sbr.x >= otl.x || obr.x >= stl.x;
+        let yoverlap = sbr.y >= otl.y || obr.y >= stl.y;
 
-    pub fn get_top_left(&mut self) -> GameResult<BoardPos>{
-        if let Some(pos) = self.top_left{
-            Ok(pos)
-        }else{
-            self.generate_bounds()?;
-            let pos = self.top_left.expect("Failed to cache bounds");
-            Ok(pos)
+        // try to avoid this since it's o(n^2)
+        if xoverlap && yoverlap{
+            for sblock in self.blocks.iter(){
+                for oblock in other.blocks.iter(){
+                    if sblock.pos == oblock.pos{
+                        return true;
+                    }
+                }
+            }
         }
+        false
     }
+}
 
-    pub fn get_bottom_right(&mut self) -> GameResult<BoardPos>{
-        if let Some(pos) = self.bottom_right{
-            Ok(pos)
-        }else{
-            self.generate_bounds()?;
-            let pos = self.bottom_right.expect("Failed to cache bounds");
-            Ok(pos)
+impl Clone for BlockObject{
+    fn clone(&self) -> BlockObject{
+        return BlockObject{
+            blocks: self.blocks.clone(),
+            image_cache: None,
+            top_left: None,
+            bottom_right: None,
+            mode: self.mode,
+            id: self.id
         }
     }
 }
@@ -183,6 +237,11 @@ impl Block{
         Block{
             pos
         }
+    }
+
+    pub fn shift(&mut self, dx: i32, dy: i32){
+        self.pos.x += dx;
+        self.pos.y += dy;
     }
 
     pub fn draw(ctx: &mut Context, tilesize: f32, nhood: [[bool; 3]; 3]) -> GameResult<graphics::Image>{

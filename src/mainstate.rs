@@ -31,20 +31,24 @@ pub enum Holding {
 impl MainState {
     pub fn new(_ctx: &mut Context) -> GameResult<MainState> {
         // TEMPCODE REMOVE EVENTUALLY
-        // let blockobjects = vec![
-        //     BlockObject::from_blocklist(vec![Block::new(BoardPos{x: 0, y: 0}), Block::new(BoardPos{x: 0, y: 1})], BlockObjectMode::Input),
-        //     BlockObject::from_blocklist(vec![Block::new(BoardPos{x: 0, y: 0})], BlockObjectMode::Output),
-        //     BlockObject::from_blocklist(vec![Block::new(BoardPos{x: 0, y: 0})], BlockObjectMode::Output)
-        // ];
-
-        let blockobjects = vec![
-            BlockObject::from_blocklist(vec![Block::new(BoardPos{x: 0, y: 0})], BlockObjectMode::Input),
-            BlockObject::from_blocklist(vec![
-                Block::new(BoardPos{x: 0, y: 0}),
-                Block::new(BoardPos{x: 1, y: 0}),
-                Block::new(BoardPos{x: 1, y: 1}),
-                Block::new(BoardPos{x: 2, y: 1})], BlockObjectMode::Output),
+        // Probably read this in from a file eventually
+        let mut blockobjects = vec![
+            BlockObject::from_blocklist(vec![Block::new(BoardPos{x: 0, y: 0}), Block::new(BoardPos{x: 0, y: 1})], BlockObjectMode::Input),
+            BlockObject::from_blocklist(vec![Block::new(BoardPos{x: 0, y: 0})], BlockObjectMode::Output),
+            BlockObject::from_blocklist(vec![Block::new(BoardPos{x: 0, y: 0})], BlockObjectMode::Output)
         ];
+        blockobjects[0].set_id(1);
+        blockobjects[1].set_id(2);
+        blockobjects[2].set_id(3);
+
+        // let blockobjects = vec![
+        //     BlockObject::from_blocklist(vec![Block::new(BoardPos{x: 0, y: 0})], BlockObjectMode::Input),
+        //     BlockObject::from_blocklist(vec![
+        //         Block::new(BoardPos{x: 0, y: 0}),
+        //         Block::new(BoardPos{x: 1, y: 0}),
+        //         Block::new(BoardPos{x: 1, y: 1}),
+        //         Block::new(BoardPos{x: 2, y: 1})], BlockObjectMode::Output),
+        // ];
 
         Ok(MainState {
             board: Board::new(BOARD_POS),

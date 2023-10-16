@@ -187,7 +187,7 @@ impl Board{
         if self.canvas.pos.contains(glam::vec2(x, y)) && button == MouseButton::Left{
             match held{
                 Holding::Tile { tiletype } => self.state.place_tile(*tiletype, self.canvas.screen_pos_to_tile(x, y)),
-                Holding::BlockObject { blockobject } => panic!("TODO: put a place blockobject function in here"),
+                Holding::BlockObject { blockobject } => self.state.place_blockobject(blockobject.clone(), self.canvas.screen_pos_to_tile(x, y))?,
                 Holding::None => ()
             }
             // NOTE: when I implement blockobject, make sure shift-placing it doesn't break anything
@@ -302,12 +302,25 @@ impl BoardState{
         }
     }
 
-    // cycles between push and empty tiles
-    fn toggle_tile(&mut self, pos: BoardPos){
-        if let Some(i) = self.find_tile(pos){
-            self.tiles.remove(i);
-        }else{
-            self.tiles.push(Tile::new(TileType::PushTile,pos));
+    fn place_blockobject(&mut self, mut blockobject: BlockObject, pos: BoardPos) -> GameResult{
+        let tl = blockobject.get_top_left()?;
+        blockobject.shift(pos.x - tl.x, pos.y - tl.y);
+
+        // remove everything with matching ids
+        let mut i = 0;
+        while i < self.blockobjects.len(){
+            if blockobject.get_id() != -1 && self.blockobjects[i].get_id() == blockobject.get_id(){
+                self.blockobjects.remove(i);
+            }else if self.blockobjects[i].has_overlap(&mut blockobject){
+                self.blockobjects.remove(i);
+            }else{
+                i += 1;
+            }
         }
+        // remove everything with overlap
+
+
+        self.blockobjects.push(blockobject);
+        Ok(())
     }
 }

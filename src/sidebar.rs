@@ -150,7 +150,6 @@ impl Sidebar{
         held: &mut Holding
     ) -> GameResult{
         if self.pos.contains(glam::vec2(x, y)) && button == MouseButton::Left{
-            println!("sidebar click at {},{}", x, y);
             // find the relevant row
             let mut curr_y = self.margin_y;
             let mut chosen_row = None;

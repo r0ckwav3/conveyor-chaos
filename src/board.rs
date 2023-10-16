@@ -1,5 +1,4 @@
 use std::collections::HashMap;
-use std::time::Duration;
 
 use ggez::{
     glam,
@@ -22,7 +21,6 @@ enum BoardMode {
 
 pub struct Board {
     mouse_down: bool,
-    click_time: Duration,
     canvas: BoardCanvas,
     state: BoardState
 }
@@ -47,7 +45,6 @@ impl Board{
     pub fn new(screenpos: graphics::Rect) -> Board {
         Board{
             mouse_down: false,
-            click_time: Duration::ZERO,
             canvas: BoardCanvas::new(screenpos),
             state: BoardState::new()
         }
@@ -161,7 +158,6 @@ impl Board{
     ) -> GameResult{
         if self.canvas.pos.contains(glam::vec2(x, y)) && button == MouseButton::Left{
             self.mouse_down = true;
-            self.click_time = ctx.time.time_since_start();
         }
         Ok(())
     }
@@ -175,11 +171,19 @@ impl Board{
     ) -> GameResult{
         if button == MouseButton::Left{
             self.mouse_down = false;
-            let time_since_click = ctx.time.time_since_start() - self.click_time;
-            // println!("thing {}", time_since_click.as_millis());
-            if time_since_click < CLICK_TIME_THRESHOLD{
-                self.state.toggle_tile(self.canvas.screen_pos_to_tile(x, y))
-            }
+        }
+        Ok(())
+    }
+
+    pub fn mouse_click_event(
+        &mut self,
+            ctx: &mut Context,
+            button: MouseButton,
+            x: f32,
+            y: f32
+    ) -> GameResult{
+        if self.canvas.pos.contains(glam::vec2(x, y)) && button == MouseButton::Left{
+            self.state.toggle_tile(self.canvas.screen_pos_to_tile(x, y));
         }
         Ok(())
     }

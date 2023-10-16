@@ -18,13 +18,15 @@ pub struct BlockObject{
     blocks: Vec<Block>,
     image_cache: Option<graphics::Image>,
     top_left: Option<BoardPos>,
-    bottom_right: Option<BoardPos>
+    bottom_right: Option<BoardPos>,
+    mode: BlockObjectMode
 }
 
-#[derive(Clone)]
-pub struct BlockObjectIO{
-    pub blockobject: BlockObject,
-    pub input: bool // true -> input, false -> output
+#[derive(Copy, Clone)]
+pub enum BlockObjectMode{
+    Input,
+    Output,
+    Processing
 }
 
 impl BlockObject{
@@ -33,16 +35,18 @@ impl BlockObject{
             blocks: Vec::new(),
             image_cache: None,
             top_left: None,
-            bottom_right: None
+            bottom_right: None,
+            mode: BlockObjectMode::Processing
         }
     }
 
-    pub fn from_blocklist(blocks: Vec<Block>) -> BlockObject{
+    pub fn from_blocklist(blocks: Vec<Block>, mode: BlockObjectMode) -> BlockObject{
         BlockObject{
             blocks,
             image_cache: None,
             top_left: None,
-            bottom_right: None
+            bottom_right: None,
+            mode
         }
     }
 
@@ -101,7 +105,7 @@ impl BlockObject{
             canvas_h.ceil() as u32,
             1
         );
-        let mut image_canvas = graphics::Canvas::from_image(ctx, image.clone(), graphics::Color::from_rgba(0,0,0,0));
+        let mut image_canvas = graphics::Canvas::from_image(ctx, image.clone(), TRANSPARENT_COLOR);
         // find the locations of all blocks
         let mut block_grid: Vec<Vec<bool>> = Vec::new();
         block_grid.resize(grid_h as usize, Vec::new());
@@ -126,7 +130,10 @@ impl BlockObject{
                     }
                 }
                 // println!("nhood of {}, {}: {:?}", x, y, nhood);
-                let block_image = Block::draw(ctx, tilesize, nhood)?;
+                let block_image = match self.mode{
+                    BlockObjectMode::Output => Block::draw_output(ctx, tilesize, nhood),
+                    _default => Block::draw(ctx, tilesize, nhood),
+                }?;
                 image_canvas.draw(
                     &block_image,
                     glam::vec2(x as f32 * tilesize, y as f32 * tilesize)
@@ -186,8 +193,10 @@ impl Block{
             tilesize.ceil() as u32,
             1
         );
-        let mut image_canvas = graphics::Canvas::from_image(ctx, image.clone(), graphics::Color::from_rgba(0,0,0,0));
+        let mut image_canvas = graphics::Canvas::from_image(ctx, image.clone(), TRANSPARENT_COLOR);
 
+        // TODO, we generate these exact meshes a bunch of times per frame
+        // I wonder if we can cache them
         let base_mesh = graphics::Mesh::new_rounded_rectangle(
             ctx, graphics::DrawMode::fill(),
             graphics::Rect::new(0.0, 0.0, tilesize, tilesize),
@@ -245,6 +254,74 @@ impl Block{
             image_canvas.draw(&clear_base_mesh, graphics::DrawParam::default());
         }
 
+        image_canvas.finish(ctx)?;
+
+        Ok(image)
+    }
+
+    pub fn draw_output(ctx: &mut Context, tilesize: f32, nhood: [[bool; 3]; 3]) -> GameResult<graphics::Image>{
+        let color_format = ctx.gfx.surface_format();
+        let image = graphics::Image::new_canvas_image(
+            ctx, color_format,
+            tilesize.ceil() as u32,
+            tilesize.ceil() as u32,
+            1
+        );
+        let mut image_canvas = graphics::Canvas::from_image(ctx, image.clone(), TRANSPARENT_COLOR);
+
+        if nhood[1][1]{ // if the center tile exists
+            let base_mesh = graphics::Mesh::new_rectangle(
+                ctx, graphics::DrawMode::fill(),
+                graphics::Rect::new(0.0, 0.0, tilesize, tilesize),
+                OUTPUT_BLOCK_COLOR
+            )?;
+
+            // top edge
+            let edge_mesh = graphics::Mesh::new_rectangle(
+                ctx, graphics::DrawMode::fill(),
+                graphics::Rect::new(0.0, 0.0, tilesize, OUTPUT_OUTLINE_WIDTH),
+                OUTPUT_OUTLINE_COLOR
+            )?;
+
+            let corner_mesh = graphics::Mesh::new_rectangle(
+                ctx, graphics::DrawMode::fill(),
+                graphics::Rect::new(0.0, 0.0, OUTPUT_OUTLINE_WIDTH, OUTPUT_OUTLINE_WIDTH),
+                OUTPUT_OUTLINE_COLOR
+            )?;
+            let corner_offset = tilesize - OUTPUT_OUTLINE_WIDTH;
+
+            let pi = std::f32::consts::PI;
+
+            // draw the base
+            image_canvas.draw(&base_mesh, graphics::DrawParam::default());
+
+            // sides
+            if !nhood[0][1]{ // up
+                image_canvas.draw(&edge_mesh, graphics::DrawParam::new().dest(glam::vec2(0.0, 0.0)).rotation(0.0 * pi));
+            }
+            if !nhood[1][2]{ // right
+                image_canvas.draw(&edge_mesh, graphics::DrawParam::new().dest(glam::vec2(tilesize, 0.0)).rotation(0.5 * pi));
+            }
+            if !nhood[2][1]{ // down
+                image_canvas.draw(&edge_mesh, graphics::DrawParam::new().dest(glam::vec2(tilesize, tilesize)).rotation(1.0 * pi));
+            }
+            if !nhood[1][0]{ // left
+                image_canvas.draw(&edge_mesh, graphics::DrawParam::new().dest(glam::vec2(0.0, tilesize)).rotation(1.5 * pi));
+            }
+            // corners
+            if !nhood[0][0]{
+                image_canvas.draw(&corner_mesh, graphics::DrawParam::new().dest(glam::vec2(0.0, 0.0)));
+            }
+            if !nhood[0][2]{
+                image_canvas.draw(&corner_mesh, graphics::DrawParam::new().dest(glam::vec2(corner_offset, 0.0)));
+            }
+            if !nhood[2][0]{
+                image_canvas.draw(&corner_mesh, graphics::DrawParam::new().dest(glam::vec2(0.0, corner_offset)));
+            }
+            if !nhood[2][2]{
+                image_canvas.draw(&corner_mesh, graphics::DrawParam::new().dest(glam::vec2(corner_offset, corner_offset)));
+            }
+        }
         image_canvas.finish(ctx)?;
 
         Ok(image)

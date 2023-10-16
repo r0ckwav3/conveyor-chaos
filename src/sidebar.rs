@@ -8,7 +8,7 @@ use ggez::{
 };
 
 use crate::tile::TileType;
-use crate::block::BlockObjectIO;
+use crate::block::BlockObject;
 use crate::constants::*;
 
 pub struct Sidebar{
@@ -20,7 +20,7 @@ pub struct Sidebar{
     margin_y: f32,
     scroll_y: f32,
     tiles: Vec<TileType>,
-    blockobjects: Vec<BlockObjectIO>,
+    blockobjects: Vec<BlockObject>,
     rows: Vec<SidebarRow>
 }
 
@@ -35,14 +35,14 @@ struct SidebarRowTile{
     padding: f32 // on the side of each tile
 }
 
-// for now I'm going to hav each BORow only contain one BlockObjectIO
+// for now I'm going to have each BORow only contain one BlockObject
 struct SidebarRowBO{
-    blockobject: BlockObjectIO,
+    blockobject: BlockObject,
     tilesize: f32
 }
 
 impl Sidebar{
-    pub fn new(pos: graphics::Rect, bos: &Vec<BlockObjectIO>) -> GameResult<Sidebar>{
+    pub fn new(pos: graphics::Rect, bos: &Vec<BlockObject>) -> GameResult<Sidebar>{
         let mut new = Sidebar{
             pos,
             tilesize: SIDEBAR_TILESIZE,
@@ -61,7 +61,7 @@ impl Sidebar{
         Ok(new)
     }
 
-    pub fn set_bos(&mut self, bos: &Vec<BlockObjectIO>) -> GameResult{
+    pub fn set_bos(&mut self, bos: &Vec<BlockObject>) -> GameResult{
         self.blockobjects = bos.clone();
         self.init_rows()?;
         Ok(())
@@ -94,8 +94,8 @@ impl Sidebar{
 
         // blockobject rows
         for bo in self.blockobjects.iter_mut(){
-            let botl = bo.blockobject.get_top_left()?;
-            let bobr = bo.blockobject.get_bottom_right()?;
+            let botl = bo.get_top_left()?;
+            let bobr = bo.get_bottom_right()?;
             let bowidth = 1 + bobr.x - botl.x;
             // if the block object won't fit, use a smaller tile size
             let tilesize;
@@ -138,6 +138,20 @@ impl Sidebar{
         out_canvas.draw(&image, glam::vec2(self.pos.x, self.pos.y));
         Ok(())
     }
+
+    pub fn mouse_click_event(
+        &mut self,
+        ctx: &mut Context,
+        button: MouseButton,
+        x: f32,
+        y: f32
+    ) -> GameResult{
+        if self.pos.contains(glam::vec2(x, y)) && button == MouseButton::Left{
+            println!("sidebar click at {},{}", x, y);
+        }
+        Ok(())
+    }
+
 }
 
 // I could also implement this as a trait, which honestly seems like it's more idiomatic
@@ -198,7 +212,7 @@ impl SidebarRowTile{
 }
 
 impl SidebarRowBO{
-    fn new(tilesize:f32, blockobject: BlockObjectIO) -> SidebarRowBO{
+    fn new(tilesize:f32, blockobject: BlockObject) -> SidebarRowBO{
         SidebarRowBO{
             blockobject,
             tilesize,
@@ -207,8 +221,8 @@ impl SidebarRowBO{
 
     fn draw(&mut self, ctx: &mut Context) -> GameResult<Image> {
         let color_format = ctx.gfx.surface_format();
-        let botl = self.blockobject.blockobject.get_top_left()?;
-        let bobr = self.blockobject.blockobject.get_bottom_right()?;
+        let botl = self.blockobject.get_top_left()?;
+        let bobr = self.blockobject.get_bottom_right()?;
         let bowidth = 1 + bobr.x - botl.x;
         let boheight = 1 + bobr.y - botl.y;
 
@@ -224,7 +238,7 @@ impl SidebarRowBO{
         let mut image_canvas = graphics::Canvas::from_image(ctx, image.clone(), TRANSPARENT_COLOR);
 
         image_canvas.draw(
-            &self.blockobject.blockobject.draw(ctx, self.tilesize)?,
+            &self.blockobject.draw(ctx, self.tilesize)?,
             glam::vec2(0.0, 0.0)
         );
 
@@ -233,8 +247,8 @@ impl SidebarRowBO{
     }
 
     fn get_height(&mut self) -> GameResult<f32>{
-        let botl = self.blockobject.blockobject.get_top_left()?;
-        let bobr = self.blockobject.blockobject.get_bottom_right()?;
+        let botl = self.blockobject.get_top_left()?;
+        let bobr = self.blockobject.get_bottom_right()?;
         let boheight = 1 + bobr.y - botl.y;
 
         Ok(self.tilesize * boheight as f32)

@@ -16,15 +16,18 @@ pub const CLICK_TIME_THRESHOLD: Duration = Duration::from_millis(250);
 pub const TILE_SIZE: f32 = 100.0;
 pub const GRID_THICKNESS: f32 = 0.1;
 pub const BLOCK_ROUNDNESS: f32 = 0.3; // 0.0 is a square, 0.5 is a circle
+pub const OUTPUT_OUTLINE_WIDTH: f32 = 10.0;
 
 // colors
+pub const TRANSPARENT_COLOR: Color = Color::new(0.0, 0.0, 0.0, 0.0);
 pub const BOARD_BG_COLOR: Color = Color::new(0.2, 0.2, 0.2, 1.0);
 pub const SIDEBAR_BG_COLOR: Color = Color::new(0.5, 0.5, 0.5, 1.0);
 pub const TILE_BG_COLOR: Color = Color::new(0.3, 0.3, 0.3, 1.0);
 pub const TILE_SYMBOL_COLOR: Color = Color::new(0.1, 0.9, 1.0, 1.0);
 pub const BLOCK_COLOR: Color = Color::new(0.9, 0.9, 0.9, 1.0);
-pub const BLOCK_INNER_COLOR: Color = Color::new(0.8, 0.8, 0.8, 1.0);
-pub const TRANSPARENT_COLOR: Color = Color::new(0.0, 0.0, 0.0, 0.0);
+// pub const BLOCK_INNER_COLOR: Color = Color::new(0.8, 0.8, 0.8, 1.0);
+pub const OUTPUT_BLOCK_COLOR: Color = Color::new(0.0, 0.0, 0.0, 1.0);
+pub const OUTPUT_OUTLINE_COLOR: Color = Color::new(0.7, 0.2, 0.2, 1.0);
 
 // animation
 pub const ANIMATION_DURATION: f32 = 1.0;

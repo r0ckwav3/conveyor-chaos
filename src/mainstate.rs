@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 use ggez::{
     event,
     graphics,
@@ -6,12 +8,13 @@ use ggez::{
 };
 
 use crate::board::Board;
-use crate::block::{BlockObjectIO, BlockObject, Block};
+use crate::block::{BlockObjectMode, BlockObject, Block};
 use crate::sidebar::Sidebar;
 use crate::helpers::*;
 use crate::constants::*;
 
 pub struct MainState {
+    click_time: Duration,
     board: Board,
     sidebar: Sidebar
 }
@@ -19,14 +22,25 @@ pub struct MainState {
 impl MainState {
     pub fn new(_ctx: &mut Context) -> GameResult<MainState> {
         // TEMPCODE REMOVE EVENTUALLY
+        // let blockobjects = vec![
+        //     BlockObject::from_blocklist(vec![Block::new(BoardPos{x: 0, y: 0}), Block::new(BoardPos{x: 0, y: 1})], BlockObjectMode::Input),
+        //     BlockObject::from_blocklist(vec![Block::new(BoardPos{x: 0, y: 0})], BlockObjectMode::Output),
+        //     BlockObject::from_blocklist(vec![Block::new(BoardPos{x: 0, y: 0})], BlockObjectMode::Output)
+        // ];
+
         let blockobjects = vec![
-            BlockObjectIO{blockobject: BlockObject::from_blocklist(vec![Block::new(BoardPos{x: 0, y: 0}), Block::new(BoardPos{x: 0, y: 1})]), input: true},
-            BlockObjectIO{blockobject: BlockObject::from_blocklist(vec![Block::new(BoardPos{x: 0, y: 0})]), input: false},
-            BlockObjectIO{blockobject: BlockObject::from_blocklist(vec![Block::new(BoardPos{x: 0, y: 0})]), input: false}
+            BlockObject::from_blocklist(vec![Block::new(BoardPos{x: 0, y: 0})], BlockObjectMode::Input),
+            BlockObject::from_blocklist(vec![
+                Block::new(BoardPos{x: 0, y: 0}),
+                Block::new(BoardPos{x: 1, y: 0}),
+                Block::new(BoardPos{x: 1, y: 1}),
+                Block::new(BoardPos{x: 2, y: 1})], BlockObjectMode::Output),
         ];
+
         Ok(MainState {
             board: Board::new(BOARD_POS),
-            sidebar: Sidebar::new(SIDEBAR_POS, &blockobjects)?
+            sidebar: Sidebar::new(SIDEBAR_POS, &blockobjects)?,
+            click_time: Duration::ZERO,
         })
     }
 }
@@ -49,11 +63,24 @@ impl event::EventHandler for MainState {
     }
 
     fn mouse_button_down_event(&mut self, ctx: &mut Context, button: MouseButton, x: f32, y: f32) -> GameResult{
+        if button == MouseButton::Left{
+            self.click_time = ctx.time.time_since_start();
+        }
+
         self.board.mouse_button_down_event(ctx,button,x,y)?;
         Ok(())
     }
 
     fn mouse_button_up_event(&mut self, ctx: &mut Context, button: MouseButton, x: f32, y: f32) -> GameResult{
+        if button == MouseButton::Left{
+            let time_since_click = ctx.time.time_since_start() - self.click_time;
+            // println!("thing {}", time_since_click.as_millis());
+            if time_since_click < CLICK_TIME_THRESHOLD{
+                self.board.mouse_click_event(ctx,button,x,y)?;
+                self.sidebar.mouse_click_event(ctx,button,x,y)?;
+            }
+        }
+
         self.board.mouse_button_up_event(ctx,button,x,y)?;
         Ok(())
     }

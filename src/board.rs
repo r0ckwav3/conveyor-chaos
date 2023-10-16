@@ -8,6 +8,7 @@ use ggez::{
     Context, GameResult, GameError
 };
 
+use crate::mainstate::Holding;
 use crate::tile::{Tile, TileType};
 use crate::block::{Block, BlockObject};
 use crate::constants::*;
@@ -164,10 +165,10 @@ impl Board{
 
     pub fn mouse_button_up_event(
         &mut self,
-        ctx: &mut Context,
+        _ctx: &mut Context,
         button: MouseButton,
-        x: f32,
-        y: f32
+        _x: f32,
+        _y: f32
     ) -> GameResult{
         if button == MouseButton::Left{
             self.mouse_down = false;
@@ -180,10 +181,19 @@ impl Board{
             ctx: &mut Context,
             button: MouseButton,
             x: f32,
-            y: f32
+            y: f32,
+            held: &mut Holding
     ) -> GameResult{
         if self.canvas.pos.contains(glam::vec2(x, y)) && button == MouseButton::Left{
-            self.state.toggle_tile(self.canvas.screen_pos_to_tile(x, y));
+            match held{
+                Holding::Tile { tiletype } => self.state.place_tile(*tiletype, self.canvas.screen_pos_to_tile(x, y)),
+                Holding::BlockObject { blockobject } => panic!("TODO: put a place blockobject function in here"),
+                Holding::None => ()
+            }
+            // NOTE: when I implement blockobject, make sure shift-placing it doesn't break anything
+            if !ctx.keyboard.is_mod_active(KeyMods::SHIFT){
+                *held = Holding::None;
+            }
         }
         Ok(())
     }
@@ -221,7 +231,7 @@ impl BoardCanvas{
     fn new(screenpos: graphics::Rect) -> BoardCanvas {
         BoardCanvas{
             pos: screenpos,
-            tile_size: TILE_SIZE,
+            tile_size: TILESIZE,
             grid_thickness: GRID_THICKNESS,
             offset_x: 0.0,
             offset_y: 0.0

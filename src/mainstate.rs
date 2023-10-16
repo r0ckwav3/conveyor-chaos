@@ -1,6 +1,7 @@
 use std::time::Duration;
 
 use ggez::{
+    glam,
     event,
     graphics,
     input::{mouse::MouseButton, keyboard::KeyInput, keyboard::KeyCode},
@@ -8,6 +9,7 @@ use ggez::{
 };
 
 use crate::board::Board;
+use crate::tile::TileType;
 use crate::block::{BlockObjectMode, BlockObject, Block};
 use crate::sidebar::Sidebar;
 use crate::helpers::*;
@@ -16,7 +18,14 @@ use crate::constants::*;
 pub struct MainState {
     click_time: Duration,
     board: Board,
-    sidebar: Sidebar
+    sidebar: Sidebar,
+    held: Holding
+}
+
+pub enum Holding {
+    BlockObject{blockobject: BlockObject},
+    Tile{tiletype: TileType},
+    None
 }
 
 impl MainState {
@@ -41,6 +50,7 @@ impl MainState {
             board: Board::new(BOARD_POS),
             sidebar: Sidebar::new(SIDEBAR_POS, &blockobjects)?,
             click_time: Duration::ZERO,
+            held: Holding::None
         })
     }
 }
@@ -56,6 +66,33 @@ impl event::EventHandler for MainState {
 
         self.board.draw(ctx, &mut canvas)?;
         self.sidebar.draw(ctx, &mut canvas)?;
+
+        //draw what the player is holding
+        // TODO: add a slight alpha reduction to the image
+        match &mut self.held{
+            Holding::Tile { tiletype } => {
+                let tileimage = TileType::get_image(ctx, *tiletype, HELD_TILESIZE, HELD_TILESIZE*GRID_THICKNESS/2.0)?;
+                canvas.draw(
+                    &tileimage,
+                    glam::vec2(
+                        ctx.mouse.position().x - HELD_TILESIZE/2.0,
+                        ctx.mouse.position().y - HELD_TILESIZE/2.0
+                    )
+                )
+            }
+            Holding::BlockObject { blockobject } => {
+                let blockobjectimage = blockobject.draw(ctx, HELD_TILESIZE)?;
+                canvas.draw(
+                    &blockobjectimage,
+                    glam::vec2(
+                        ctx.mouse.position().x - HELD_TILESIZE/2.0,
+                        ctx.mouse.position().y - HELD_TILESIZE/2.0
+                    )
+                )
+
+            }
+            Holding::None => ()
+        }
 
         canvas.finish(ctx)?;
 
@@ -76,8 +113,8 @@ impl event::EventHandler for MainState {
             let time_since_click = ctx.time.time_since_start() - self.click_time;
             // println!("thing {}", time_since_click.as_millis());
             if time_since_click < CLICK_TIME_THRESHOLD{
-                self.board.mouse_click_event(ctx,button,x,y)?;
-                self.sidebar.mouse_click_event(ctx,button,x,y)?;
+                self.board.mouse_click_event(ctx,button,x,y,&mut self.held)?;
+                self.sidebar.mouse_click_event(ctx,button,x,y,&mut self.held)?;
             }
         }
 

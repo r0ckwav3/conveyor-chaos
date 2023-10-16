@@ -13,10 +13,16 @@ pub const SIDEBAR_POS: Rect = Rect::new(0.0,0.0,640.0,1280.0);
 pub const CLICK_TIME_THRESHOLD: Duration = Duration::from_millis(250);
 
 // graphics
-pub const TILE_SIZE: f32 = 100.0;
+pub const TILESIZE: f32 = 100.0;
+pub const HELD_TILESIZE: f32 = 80.0;
 pub const GRID_THICKNESS: f32 = 0.1;
 pub const BLOCK_ROUNDNESS: f32 = 0.3; // 0.0 is a square, 0.5 is a circle
 pub const OUTPUT_OUTLINE_WIDTH: f32 = 10.0;
+pub const SIDEBAR_TILESIZE: f32 = 100.0;
+pub const SIDEBAR_SPACING_X: f32 = 50.0;
+pub const SIDEBAR_SPACING_Y: f32 = 50.0;
+pub const SIDEBAR_MARGING_X: f32 = 50.0;
+pub const SIDEBAR_MARGIN_Y: f32 = 50.0;
 
 // colors
 pub const TRANSPARENT_COLOR: Color = Color::new(0.0, 0.0, 0.0, 0.0);
@@ -35,10 +41,3 @@ pub const ANIMATION_DURATION: f32 = 1.0;
 // helpers
 // non-empty tile types
 pub const TILETYPES: [TileType; 1] = [TileType::PushTile];
-
-// Sidebar
-pub const SIDEBAR_TILESIZE: f32 = 100.0;
-pub const SIDEBAR_SPACING_X: f32 = 50.0;
-pub const SIDEBAR_SPACING_Y: f32 = 50.0;
-pub const SIDEBAR_MARGING_X: f32 = 50.0;
-pub const SIDEBAR_MARGIN_Y: f32 = 50.0;

@@ -7,6 +7,7 @@ use ggez::{
     Context, GameResult, GameError
 };
 
+use crate::mainstate::Holding;
 use crate::tile::TileType;
 use crate::block::BlockObject;
 use crate::constants::*;
@@ -21,12 +22,13 @@ pub struct Sidebar{
     scroll_y: f32,
     tiles: Vec<TileType>,
     blockobjects: Vec<BlockObject>,
-    rows: Vec<SidebarRow>
+    rows: Vec<Box<dyn SidebarRow>>
 }
 
-enum SidebarRow{
-    TileRow{row: SidebarRowTile},
-    BORow{row: SidebarRowBO}
+pub trait SidebarRow{
+    fn draw(&mut self, ctx: &mut Context) -> GameResult<Image>;
+    fn get_height(&mut self) -> GameResult<f32>;
+    fn get_held(&mut self, x: f32, y: f32) -> GameResult<Holding>;
 }
 
 struct SidebarRowTile{
@@ -89,7 +91,7 @@ impl Sidebar{
             let len = temp_srt.tiles.len();
             temp_srt.padding = (width - ((len as f32) * self.tilesize)) / ((len*2) as f32);
 
-            self.rows.push(SidebarRow::TileRow { row: temp_srt });
+            self.rows.push(Box::new(temp_srt));
         }
 
         // blockobject rows
@@ -106,7 +108,7 @@ impl Sidebar{
             }
 
             let temp_srbo = SidebarRowBO::new(tilesize, bo.clone());
-            self.rows.push(SidebarRow::BORow { row: temp_srbo });
+            self.rows.push(Box::new(temp_srbo));
         }
         Ok(())
     }
@@ -141,34 +143,30 @@ impl Sidebar{
 
     pub fn mouse_click_event(
         &mut self,
-        ctx: &mut Context,
+        _ctx: &mut Context,
         button: MouseButton,
         x: f32,
-        y: f32
+        y: f32,
+        held: &mut Holding
     ) -> GameResult{
         if self.pos.contains(glam::vec2(x, y)) && button == MouseButton::Left{
             println!("sidebar click at {},{}", x, y);
+            // find the relevant row
+            let mut curr_y = self.margin_y;
+            let mut chosen_row = None;
+            for row in self.rows.iter_mut(){
+                if y > curr_y && y < curr_y + row.get_height()?{
+                    chosen_row = Some(row);
+                    break;
+                }
+                curr_y += row.get_height()? + self.spacing_y;
+            }
+            *held = match chosen_row{
+                Some(row) => row.get_held(x-self.margin_x, y-curr_y)?,
+                None => Holding::None
+            }
         }
         Ok(())
-    }
-
-}
-
-// I could also implement this as a trait, which honestly seems like it's more idiomatic
-// TODO: maybe do that instead
-impl SidebarRow{
-    fn draw(&mut self, ctx: &mut Context) -> GameResult<Image> {
-        match self{
-            SidebarRow::TileRow{row: subrow} => subrow.draw(ctx),
-            SidebarRow::BORow{row: subrow} => subrow.draw(ctx)
-        }
-    }
-
-    fn get_height(&mut self) -> GameResult<f32>{
-        match self{
-            SidebarRow::TileRow{row: subrow} => subrow.get_height(),
-            SidebarRow::BORow{row: subrow} => subrow.get_height()
-        }
     }
 }
 
@@ -180,8 +178,10 @@ impl SidebarRowTile{
             padding: 0.0
         }
     }
+}
 
-    fn draw(&self, ctx: &mut Context) -> GameResult<Image> {
+impl SidebarRow for SidebarRowTile{
+    fn draw(&mut self, ctx: &mut Context) -> GameResult<Image> {
         let color_format = ctx.gfx.surface_format();
         let width = (self.tilesize + 2.0*self.padding) * self.tiles.len() as f32;
         let height = self.tilesize;
@@ -209,6 +209,16 @@ impl SidebarRowTile{
     fn get_height(&mut self) -> GameResult<f32>{
         Ok(self.tilesize)
     }
+
+    fn get_held(&mut self, x: f32, _y: f32) -> GameResult<Holding>{
+        for (i, tile) in self.tiles.iter().enumerate(){
+            let xpos = self.padding + (self.tilesize + (2.0 * self.padding)) * i as f32;
+            if x >= xpos && x <= xpos + self.tilesize{
+                return Ok(Holding::Tile { tiletype: *tile })
+            }
+        }
+        Ok(Holding::None)
+    }
 }
 
 impl SidebarRowBO{
@@ -218,7 +228,9 @@ impl SidebarRowBO{
             tilesize,
         }
     }
+}
 
+impl SidebarRow for SidebarRowBO{
     fn draw(&mut self, ctx: &mut Context) -> GameResult<Image> {
         let color_format = ctx.gfx.surface_format();
         let botl = self.blockobject.get_top_left()?;
@@ -252,5 +264,19 @@ impl SidebarRowBO{
         let boheight = 1 + bobr.y - botl.y;
 
         Ok(self.tilesize * boheight as f32)
+    }
+
+    fn get_held(&mut self, x: f32, _y: f32) -> GameResult<Holding>{
+        let botl = self.blockobject.get_top_left()?;
+        let bobr = self.blockobject.get_bottom_right()?;
+        let bowidth = 1 + bobr.x - botl.x;
+
+        let width = self.tilesize * bowidth as f32;
+
+        if x<width {
+            Ok(Holding::BlockObject { blockobject: self.blockobject.clone() })
+        }else{
+            Ok(Holding::None)
+        }
     }
 }

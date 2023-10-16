@@ -11,7 +11,7 @@ pub mod mainstate;
 pub mod sidebar;
 
 pub fn main() -> GameResult {
-    let cb = ggez::ContextBuilder::new("manufacturing", "r0ckwav3")
+    let cb = ggez::ContextBuilder::new("conveyor-chaos", "r0ckwav3")
         .window_setup(ggez::conf::WindowSetup::default().title("A Manufacturing Game(TM)"))
         .window_mode(ggez::conf::WindowMode::default().dimensions(SCREEN_SIZE.0, SCREEN_SIZE.1));
     let (mut ctx, event_loop) = cb.build()?;

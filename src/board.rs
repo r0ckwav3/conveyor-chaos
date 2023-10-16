@@ -140,7 +140,8 @@ impl Board{
                 bo_pos.x as f32 * self.canvas.tile_size - self.canvas.offset_x,
                 bo_pos.y as f32 * self.canvas.tile_size - self.canvas.offset_y
             ).into();
-            image_canvas.draw(&bo_image, screenpos);
+
+            image_canvas.draw(&mult_alpha(ctx, bo_image, BUILDING_BLOCKOBJECT_ALPHA)?, screenpos);
         }
 
 

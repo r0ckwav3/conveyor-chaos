@@ -71,31 +71,21 @@ impl event::EventHandler for MainState {
         self.board.draw(ctx, &mut canvas)?;
         self.sidebar.draw(ctx, &mut canvas)?;
 
-        //draw what the player is holding
-        // TODO: add a slight alpha reduction to the image
-        match &mut self.held{
-            Holding::Tile { tiletype } => {
-                let tileimage = TileType::get_image(ctx, *tiletype, HELD_TILESIZE, HELD_TILESIZE*GRID_THICKNESS/2.0)?;
-                canvas.draw(
-                    &tileimage,
-                    glam::vec2(
-                        ctx.mouse.position().x - HELD_TILESIZE/2.0,
-                        ctx.mouse.position().y - HELD_TILESIZE/2.0
-                    )
-                )
-            }
-            Holding::BlockObject { blockobject } => {
-                let blockobjectimage = blockobject.draw(ctx, HELD_TILESIZE)?;
-                canvas.draw(
-                    &blockobjectimage,
-                    glam::vec2(
-                        ctx.mouse.position().x - HELD_TILESIZE/2.0,
-                        ctx.mouse.position().y - HELD_TILESIZE/2.0
-                    )
-                )
+        // draw what the player is holding
+        let heldimage = match &mut self.held{
+            Holding::Tile { tiletype } => Some(TileType::get_image(ctx, *tiletype, HELD_TILESIZE, HELD_TILESIZE*GRID_THICKNESS/2.0)?),
+            Holding::BlockObject { blockobject } => Some(blockobject.draw(ctx, HELD_TILESIZE)?),
+            Holding::None => None
+        };
 
-            }
-            Holding::None => ()
+        if let Some(im) = heldimage{
+            canvas.draw(
+                &mult_alpha(ctx, im, HELD_OBJECT_ALPHA)?,
+                glam::vec2(
+                    ctx.mouse.position().x - HELD_TILESIZE/2.0,
+                    ctx.mouse.position().y - HELD_TILESIZE/2.0
+                )
+            )
         }
 
         canvas.finish(ctx)?;

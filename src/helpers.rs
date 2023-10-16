@@ -1,10 +1,17 @@
 use ggez::{
     GameResult,
     GameError,
-    graphics::{DrawParam,Transform},
+    Context,
+    graphics::{self,DrawParam,Transform,Image},
     glam::{Mat2, vec2},
     mint::Point2
 };
+
+#[derive(Clone, Copy, PartialEq)]
+pub struct BoardPos {
+    pub x: i32,
+    pub y: i32
+}
 
 // takes in a DrawParam and adjusts the dest so that that the original dest point is now the actual top left corner
 // assumes offset is 0, causes unexpected behavior otherwise
@@ -40,8 +47,21 @@ pub fn rot_fix(dp: &mut DrawParam, w: f32, h:f32) -> GameResult<DrawParam>{
     }
 }
 
-#[derive(Clone, Copy, PartialEq)]
-pub struct BoardPos {
-    pub x: i32,
-    pub y: i32
+// multiply the whole image by a given alpha value/
+// nondestructive
+pub fn mult_alpha(ctx: &mut Context, im: Image, alpha: f32) -> GameResult<Image>{
+    let color_format = ctx.gfx.surface_format();
+    let image = Image::new_canvas_image(
+        ctx, color_format,
+        im.width(),
+        im.height(),
+        1
+    );
+    let mut image_canvas = graphics::Canvas::from_image(ctx, image.clone(), graphics::Color::new(1.0, 1.0, 1.0, alpha));
+    image_canvas.set_blend_mode(graphics::BlendMode::MULTIPLY);
+    image_canvas.draw(&im, DrawParam::default());
+
+    image_canvas.finish(ctx)?;
+    Ok(image)
+
 }

@@ -215,14 +215,16 @@ impl Board{
     }
 
     pub fn key_down_event(&mut self, ctx: &mut Context, input: KeyInput, _repeated: bool) -> GameResult {
+        let mouse_pos = ctx.mouse.position();
+        let tile_pos = self.canvas.screen_pos_to_tile(mouse_pos.x, mouse_pos.y);
         if input.keycode == Some(KeyCode::R) {
-            let mouse_pos = ctx.mouse.position();
-            let tile_pos = self.canvas.screen_pos_to_tile(mouse_pos.x, mouse_pos.y);
             if input.mods.contains(KeyMods::SHIFT){
                 self.state.rotate_tile_ccw(tile_pos);
             }else{
                 self.state.rotate_tile(tile_pos);
             }
+        }else if input.keycode == Some(KeyCode::D) {
+            self.state.remove_tile(tile_pos);
         }
         Ok(())
     }

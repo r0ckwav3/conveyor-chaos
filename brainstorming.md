@@ -106,3 +106,31 @@ Set 2:
    * select it
 
 I'm currently leaning towards set 2
+
+Also, can you rotare an input or output while inputting it?
+
+# Aesthetics Brainstorming
+Has to explain:
+ * What are the tiles?
+   * Probably the easiest to explain, either maglev or conveyors or magic runes
+ * What are the blocks
+   * This is actually a very intesting question, because we're making very crude shapes most of the time
+   * In addition, there's currently only one type of block, but that can be changed
+   * This makes me lean away from making human-scale things
+   * Vague ideas:
+     * Atoms or similar (opus magnum and molek-syntez both do this though)
+     * Pre-fab housing
+     * non-representational blobs, just a puzzle game with no explaination
+       * In that case I could go with a kidna sketchbook look for everything else
+       * Probably have colored blobs as well?
+     * Magical essences or something (I'm also worried it'll end up looking too much like opus magnum)
+     * Spaceships?? I would need triangular peices to make it look aerodynamic though
+       * What is the minimum number of peices? Square, triangle, thruster
+     * Piping?
+       * very few peices needed, but I feel like you can get a lot of milage out of it
+       * lends well to a very warehouse-y industrial aesthetic as well, which is sorta what I'm already going for
+       * Could also lean steampunk
+ * Why are we automating?
+   * This is very large or very small, so cannot be done by a person
+   * This will be done a lot so automation is neccesary
+   * This is not a physical process that a person can do

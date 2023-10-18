@@ -196,6 +196,14 @@ impl BlockObject{
         Ok(())
     }
 
+    // since we need a context and tilesize to generate the image, we just clear it until we draw again
+    // if you only change the position (e.g. shift) you can use generate_bounds immediately
+    fn reset_cache(&mut self){
+        self.top_left = None;
+        self.bottom_right = None;
+        self.image_cache = None;
+    }
+
     pub fn has_overlap(&mut self, other: &mut Self) -> bool{
         let zeropos = BoardPos{x:0,y:0};
         let stl = self.get_top_left().unwrap_or(zeropos);
@@ -216,6 +224,20 @@ impl BlockObject{
             }
         }
         false
+    }
+
+    pub fn rotate_cw(&mut self, around: BoardPos){
+        for block in self.blocks.iter_mut(){
+            block.rotate_cw(around);
+        }
+        self.reset_cache();
+    }
+
+    pub fn rotate_ccw(&mut self, around: BoardPos){
+        for block in self.blocks.iter_mut(){
+            block.rotate_ccw(around);
+        }
+        self.reset_cache();
     }
 }
 
@@ -242,6 +264,24 @@ impl Block{
     pub fn shift(&mut self, dx: i32, dy: i32){
         self.pos.x += dx;
         self.pos.y += dy;
+    }
+
+    pub fn rotate_ccw(&mut self, around: BoardPos){
+        // x_rel = (y_rel), y_rel = -(x_rel)
+        // x_rel = x-x_around, y_rel = y-y_around
+        // x-x_around = (y-y_around), y-y_around = -(x-x_around)
+        // x = y-y_around+x_around, y = -x+x_around + y_around
+        self.pos = BoardPos{
+            x: self.pos.y - around.y + around.x,
+            y: around.x - self.pos.x + around.y,
+        }
+    }
+
+    pub fn rotate_cw(&mut self, around: BoardPos){
+        self.pos = BoardPos{
+            x: around.y - self.pos.y + around.x,
+            y: self.pos.x - around.x + around.y,
+        }
     }
 
     pub fn draw(ctx: &mut Context, tilesize: f32, nhood: [[bool; 3]; 3]) -> GameResult<graphics::Image>{

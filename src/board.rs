@@ -221,7 +221,7 @@ impl Board{
             if input.mods.contains(KeyMods::SHIFT){
                 self.state.rotate_tile_ccw(tile_pos);
             }else{
-                self.state.rotate_tile(tile_pos);
+                self.state.rotate_tile_cw(tile_pos);
             }
         }else if input.keycode == Some(KeyCode::D) {
             self.state.remove_tile(tile_pos);
@@ -286,9 +286,9 @@ impl BoardState{
         }
     }
 
-    fn rotate_tile(&mut self, pos: BoardPos){
+    fn rotate_tile_cw(&mut self, pos: BoardPos){
         if let Some(i) = self.find_tile(pos){
-            self.tiles[i].rotate();
+            self.tiles[i].rotate_cw();
         }
     }
 

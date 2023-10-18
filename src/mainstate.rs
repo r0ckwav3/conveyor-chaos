@@ -4,7 +4,7 @@ use ggez::{
     glam,
     event,
     graphics,
-    input::{mouse::MouseButton, keyboard::KeyInput, keyboard::KeyCode},
+    input::{mouse::MouseButton, keyboard::{KeyInput, KeyMods}, keyboard::KeyCode},
     Context, GameResult,
 };
 
@@ -32,23 +32,24 @@ impl MainState {
     pub fn new(_ctx: &mut Context) -> GameResult<MainState> {
         // TEMPCODE REMOVE EVENTUALLY
         // Probably read this in from a file eventually
-        let mut blockobjects = vec![
-            BlockObject::from_blocklist(vec![Block::new(BoardPos{x: 0, y: 0}), Block::new(BoardPos{x: 0, y: 1})], BlockObjectMode::Input),
-            BlockObject::from_blocklist(vec![Block::new(BoardPos{x: 0, y: 0})], BlockObjectMode::Output),
-            BlockObject::from_blocklist(vec![Block::new(BoardPos{x: 0, y: 0})], BlockObjectMode::Output)
-        ];
-        blockobjects[0].set_id(1);
-        blockobjects[1].set_id(2);
-        blockobjects[2].set_id(3);
-
-        // let blockobjects = vec![
-        //     BlockObject::from_blocklist(vec![Block::new(BoardPos{x: 0, y: 0})], BlockObjectMode::Input),
-        //     BlockObject::from_blocklist(vec![
-        //         Block::new(BoardPos{x: 0, y: 0}),
-        //         Block::new(BoardPos{x: 1, y: 0}),
-        //         Block::new(BoardPos{x: 1, y: 1}),
-        //         Block::new(BoardPos{x: 2, y: 1})], BlockObjectMode::Output),
+        // let mut blockobjects = vec![
+        //     BlockObject::from_blocklist(vec![Block::new(BoardPos{x: 0, y: 0}), Block::new(BoardPos{x: 0, y: 1})], BlockObjectMode::Input),
+        //     BlockObject::from_blocklist(vec![Block::new(BoardPos{x: 0, y: 0})], BlockObjectMode::Output),
+        //     BlockObject::from_blocklist(vec![Block::new(BoardPos{x: 0, y: 0})], BlockObjectMode::Output)
         // ];
+        // blockobjects[0].set_id(1);
+        // blockobjects[1].set_id(2);
+        // blockobjects[2].set_id(3);
+
+        let blockobjects = vec![
+            BlockObject::from_blocklist(vec![Block::new(BoardPos{x: 0, y: 0})], BlockObjectMode::Input),
+            BlockObject::from_blocklist(vec![
+                Block::new(BoardPos{x: 0, y: 0}),
+                Block::new(BoardPos{x: 1, y: 0}),
+                Block::new(BoardPos{x: 1, y: 1}),
+                Block::new(BoardPos{x: 2, y: 1}),
+                Block::new(BoardPos{x: 1, y: 2})], BlockObjectMode::Output),
+        ];
 
         Ok(MainState {
             board: Board::new(BOARD_POS),
@@ -124,6 +125,18 @@ impl event::EventHandler for MainState {
     fn key_down_event(&mut self, ctx: &mut Context, input: KeyInput, repeated: bool) -> GameResult {
         if input.keycode == Some(KeyCode::Escape) {
             ctx.request_quit();
+        } else if input.keycode == Some(KeyCode::R) {
+            if input.mods.contains(KeyMods::SHIFT){
+                match &mut self.held{
+                    Holding::BlockObject { blockobject } => blockobject.rotate_ccw(BoardPos{x:0,y:0}),
+                    _other => ()
+                }
+            }else{
+                match &mut self.held{
+                    Holding::BlockObject { blockobject } => blockobject.rotate_cw(BoardPos{x:0,y:0}),
+                    _other => ()
+                }
+            }
         }
         self.board.key_down_event(ctx, input, repeated)?;
         Ok(())

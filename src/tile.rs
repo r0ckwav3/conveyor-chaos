@@ -69,7 +69,7 @@ impl Tile{
         self.pos.x==other.pos.x && self.pos.y == other.pos.y
     }
 
-    pub fn rotate(&mut self){
+    pub fn rotate_cw(&mut self){
         self.dir = self.dir.clockwise();
     }
 

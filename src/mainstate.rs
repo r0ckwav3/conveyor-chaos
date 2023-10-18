@@ -41,7 +41,7 @@ impl MainState {
         // blockobjects[1].set_id(2);
         // blockobjects[2].set_id(3);
 
-        let blockobjects = vec![
+        let mut blockobjects = vec![
             BlockObject::from_blocklist(vec![Block::new(BoardPos{x: 0, y: 0})], BlockObjectMode::Input),
             BlockObject::from_blocklist(vec![
                 Block::new(BoardPos{x: 0, y: 0}),
@@ -50,6 +50,8 @@ impl MainState {
                 Block::new(BoardPos{x: 2, y: 1}),
                 Block::new(BoardPos{x: 1, y: 2})], BlockObjectMode::Output),
         ];
+        blockobjects[0].set_id(1);
+        blockobjects[1].set_id(2);
 
         Ok(MainState {
             board: Board::new(BOARD_POS),

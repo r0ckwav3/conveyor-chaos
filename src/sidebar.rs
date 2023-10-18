@@ -8,9 +8,10 @@ use ggez::{
 };
 
 use crate::mainstate::Holding;
-use crate::tile::TileType;
+use crate::tile::{Tile, TileType};
 use crate::block::BlockObject;
 use crate::constants::*;
+use crate::helpers::*;
 
 pub struct Sidebar{
     pos: graphics::Rect, // I'm secretly going to render everything in here
@@ -210,10 +211,11 @@ impl SidebarRow for SidebarRowTile{
     }
 
     fn get_held(&mut self, x: f32, _y: f32) -> GameResult<Holding>{
-        for (i, tile) in self.tiles.iter().enumerate(){
+        for (i, tiletype) in self.tiles.iter().enumerate(){
             let xpos = self.padding + (self.tilesize + (2.0 * self.padding)) * i as f32;
+            let temptile = Tile::new(*tiletype, BoardPos{x:0,y:0});
             if x >= xpos && x <= xpos + self.tilesize{
-                return Ok(Holding::Tile { tiletype: *tile })
+                return Ok(Holding::Tile { tile: temptile })
             }
         }
         Ok(Holding::None)

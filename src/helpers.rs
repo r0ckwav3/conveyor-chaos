@@ -13,6 +13,14 @@ pub struct BoardPos {
     pub y: i32
 }
 
+#[derive(Clone, Copy)]
+pub enum Direction{
+    Up,
+    Down,
+    Left,
+    Right
+}
+
 // takes in a DrawParam and adjusts the dest so that that the original dest point is now the actual top left corner
 // assumes offset is 0, causes unexpected behavior otherwise
 // designed to work with right angles, but technically works otherwise
@@ -64,4 +72,35 @@ pub fn mult_alpha(ctx: &mut Context, im: Image, alpha: f32) -> GameResult<Image>
     image_canvas.finish(ctx)?;
     Ok(image)
 
+}
+
+impl Direction {
+    pub fn clockwise(&self) -> Direction{
+        match self{
+            Direction::Right => Direction::Down,
+            Direction::Down  => Direction::Left,
+            Direction::Left  => Direction::Up,
+            Direction::Up    => Direction::Right,
+        }
+    }
+
+    pub fn counterclockwise(&self) -> Direction{
+        match self{
+            Direction::Right => Direction::Up,
+            Direction::Down  => Direction::Right,
+            Direction::Left  => Direction::Down,
+            Direction::Up    => Direction::Left,
+        }
+    }
+
+    // convert to a radian counterclockwise rotation
+    pub fn to_rot(&self) -> f32{
+        let pi = std::f32::consts::PI;
+        match self{
+            Direction::Right => 0.0,
+            Direction::Down  => pi*0.5,
+            Direction::Left  => pi,
+            Direction::Up    => pi*1.5
+        }
+    }
 }

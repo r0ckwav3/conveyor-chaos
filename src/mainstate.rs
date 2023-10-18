@@ -9,7 +9,7 @@ use ggez::{
 };
 
 use crate::board::Board;
-use crate::tile::TileType;
+use crate::tile::{Tile, TileType};
 use crate::block::{BlockObjectMode, BlockObject, Block};
 use crate::sidebar::Sidebar;
 use crate::helpers::*;
@@ -24,7 +24,7 @@ pub struct MainState {
 
 pub enum Holding {
     BlockObject{blockobject: BlockObject},
-    Tile{tiletype: TileType},
+    Tile{tile: Tile},
     None
 }
 
@@ -73,21 +73,33 @@ impl event::EventHandler for MainState {
         self.sidebar.draw(ctx, &mut canvas)?;
 
         // draw what the player is holding
-        let heldimage = match &mut self.held{
-            Holding::Tile { tiletype } => Some(TileType::get_image(ctx, *tiletype, HELD_TILESIZE, HELD_TILESIZE*GRID_THICKNESS/2.0)?),
-            Holding::BlockObject { blockobject } => Some(blockobject.draw(ctx, HELD_TILESIZE)?),
-            Holding::None => None
-        };
 
-        if let Some(im) = heldimage{
-            canvas.draw(
-                &mult_alpha(ctx, im, HELD_OBJECT_ALPHA)?,
-                glam::vec2(
+        match &mut self.held{
+            Holding::Tile { tile } => {
+                let im = TileType::get_image(ctx, tile.get_type(), HELD_TILESIZE, HELD_TILESIZE*GRID_THICKNESS/2.0)?;
+                let mut drawparam: graphics::DrawParam = glam::vec2(
                     ctx.mouse.position().x - HELD_TILESIZE/2.0,
                     ctx.mouse.position().y - HELD_TILESIZE/2.0
-                )
-            )
-        }
+                ).into();
+                drawparam = drawparam.rotation(tile.get_dir().to_rot());
+                drawparam = rot_fix(&mut drawparam, HELD_TILESIZE, HELD_TILESIZE)?;
+                canvas.draw(
+                    &mult_alpha(ctx, im, HELD_OBJECT_ALPHA)?,
+                    drawparam
+                );
+            },
+            Holding::BlockObject { blockobject } => {
+                let im = blockobject.draw(ctx, HELD_TILESIZE)?;
+                canvas.draw(
+                    &mult_alpha(ctx, im, HELD_OBJECT_ALPHA)?,
+                    glam::vec2(
+                        ctx.mouse.position().x - HELD_TILESIZE/2.0,
+                        ctx.mouse.position().y - HELD_TILESIZE/2.0
+                    )
+                );
+            },
+            Holding::None => ()
+        };
 
         canvas.finish(ctx)?;
 
@@ -129,11 +141,13 @@ impl event::EventHandler for MainState {
             if input.mods.contains(KeyMods::SHIFT){
                 match &mut self.held{
                     Holding::BlockObject { blockobject } => blockobject.rotate_ccw(BoardPos{x:0,y:0}),
+                    Holding::Tile { tile } => tile.rotate_ccw(),
                     _other => ()
                 }
             }else{
                 match &mut self.held{
                     Holding::BlockObject { blockobject } => blockobject.rotate_cw(BoardPos{x:0,y:0}),
+                    Holding::Tile { tile } => tile.rotate_cw(),
                     _other => ()
                 }
             }

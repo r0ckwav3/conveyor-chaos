@@ -14,14 +14,6 @@ pub struct Tile {
     pos: BoardPos,
 }
 
-#[derive(Clone, Copy)]
-pub enum Direction{
-    Up,
-    Down,
-    Left,
-    Right
-}
-
 #[derive(Eq, PartialEq, Hash, Debug, Clone, Copy)]
 pub enum TileType{
     Empty,
@@ -76,36 +68,9 @@ impl Tile{
     pub fn rotate_ccw(&mut self){
         self.dir = self.dir.counterclockwise();
     }
-}
 
-impl Direction {
-    fn clockwise(&self) -> Direction{
-        match self{
-            Direction::Right => Direction::Down,
-            Direction::Down  => Direction::Left,
-            Direction::Left  => Direction::Up,
-            Direction::Up    => Direction::Right,
-        }
-    }
-
-    fn counterclockwise(&self) -> Direction{
-        match self{
-            Direction::Right => Direction::Up,
-            Direction::Down  => Direction::Right,
-            Direction::Left  => Direction::Down,
-            Direction::Up    => Direction::Left,
-        }
-    }
-
-    // convert to a radian counterclockwise rotation
-    pub fn to_rot(&self) -> f32{
-        let pi = std::f32::consts::PI;
-        match self{
-            Direction::Right => 0.0,
-            Direction::Down  => pi*0.5,
-            Direction::Left  => pi,
-            Direction::Up    => pi*1.5
-        }
+    pub fn set_dir(&mut self, dir: Direction){
+        self.dir = dir;
     }
 }
 

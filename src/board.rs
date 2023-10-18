@@ -186,9 +186,12 @@ impl Board{
             held: &mut Holding
     ) -> GameResult{
         if self.canvas.pos.contains(glam::vec2(x, y)) && button == MouseButton::Left{
+            let tilepos = self.canvas.screen_pos_to_tile(x, y);
             match held{
-                Holding::Tile { tiletype } => self.state.place_tile(*tiletype, self.canvas.screen_pos_to_tile(x, y)),
-                Holding::BlockObject { blockobject } => self.state.place_blockobject(blockobject.clone(), self.canvas.screen_pos_to_tile(x, y))?,
+                Holding::Tile { tile } => {
+                    self.state.place_tile(tile.get_type(), tilepos, tile.get_dir());
+                },
+                Holding::BlockObject { blockobject } => self.state.place_blockobject(blockobject.clone(), tilepos)?,
                 Holding::None => ()
             }
             // NOTE: when I implement blockobject, make sure shift-placing it doesn't break anything
@@ -275,14 +278,16 @@ impl BoardState{
         found_index
     }
 
-    fn place_tile(&mut self, tiletype: TileType, pos: BoardPos){
-        let newtile = Tile::new(tiletype, pos);
+    fn place_tile(&mut self, tiletype: TileType, pos: BoardPos, dir: Direction) -> usize{
+        let newtile = Tile::new_directional(tiletype, pos, dir);
         let to_remove: Option<usize> = self.find_tile(pos);
 
         if let Some(i) = to_remove{
             self.tiles[i] = newtile;
+            i
         }else{
             self.tiles.push(newtile);
+            self.tiles.len()-1
         }
     }
 

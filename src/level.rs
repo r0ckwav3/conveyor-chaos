@@ -50,6 +50,7 @@ impl LevelState {
         let level_json: Vec<SerializedBlockObject> = serde_json::from_str(&level_string[..])
             .map_err(|e: serde_json::Error| GameError::ResourceLoadError(format!("Failed to parse level data into json: {}", e)))?;
 
+        let mut id_counter = 1;
         let mut out: Vec<BlockObject> = Vec::new();
         for sbo in level_json.iter(){
             let mut blocks: Vec<Block> = Vec::new();
@@ -57,7 +58,10 @@ impl LevelState {
             for pos in sbo.blocks.iter(){
                 blocks.push(Block::new(*pos))
             }
-            out.push(BlockObject::from_blocklist(blocks, mode));
+            let mut bo = BlockObject::from_blocklist(blocks, mode);
+            bo.set_id(id_counter);
+            id_counter += 1;
+            out.push(bo);
         }
 
         Ok(out)

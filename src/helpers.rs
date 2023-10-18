@@ -7,7 +7,11 @@ use ggez::{
     mint::Point2
 };
 
-#[derive(Clone, Copy, PartialEq)]
+use serde::Deserialize;
+
+use crate::block::BlockObject;
+
+#[derive(Clone, Copy, PartialEq, Deserialize)]
 pub struct BoardPos {
     pub x: i32,
     pub y: i32
@@ -19,6 +23,12 @@ pub enum Direction{
     Down,
     Left,
     Right
+}
+
+#[derive(Deserialize)]
+pub struct SerializedBlockObject{
+    pub input: bool,
+    pub blocks: Vec<BoardPos>
 }
 
 // takes in a DrawParam and adjusts the dest so that that the original dest point is now the actual top left corner

@@ -47,10 +47,20 @@ impl LevelState {
         let level_string = fs::read_to_string(level_path)
             .map_err(|e: io::Error| GameError::ResourceLoadError(format!("Failed to load level data: {}", e)))?;
 
-        // let level_json: Vec<LevelLoadFormat> = serde_json::from_str(&level_string[..])
-        //     .map_err(|e: serde_json::Error| GameError::ResourceLoadError(format!("Failed to parse level data into json: {}", e)))?;
+        let level_json: Vec<SerializedBlockObject> = serde_json::from_str(&level_string[..])
+            .map_err(|e: serde_json::Error| GameError::ResourceLoadError(format!("Failed to parse level data into json: {}", e)))?;
 
-        Err(GameError::ResourceLoadError("Failed to load level data".to_string()))
+        let mut out: Vec<BlockObject> = Vec::new();
+        for sbo in level_json.iter(){
+            let mut blocks: Vec<Block> = Vec::new();
+            let mode = if sbo.input {BlockObjectMode::Input} else {BlockObjectMode::Output};
+            for pos in sbo.blocks.iter(){
+                blocks.push(Block::new(*pos))
+            }
+            out.push(BlockObject::from_blocklist(blocks, mode));
+        }
+
+        Ok(out)
     }
 }
 

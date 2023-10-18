@@ -8,3 +8,5 @@ authors = ["r0ckwav3 peterrockwave@gmail.com"]
 
 [dependencies]
 ggez = "0.9.3"
+serde = "1.0.189"
+serde_json = "1.0.107"

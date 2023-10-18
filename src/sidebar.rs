@@ -7,7 +7,7 @@ use ggez::{
     Context, GameResult, GameError
 };
 
-use crate::mainstate::Holding;
+use crate::level::Holding;
 use crate::tile::{Tile, TileType};
 use crate::block::BlockObject;
 use crate::constants::*;

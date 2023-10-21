@@ -15,7 +15,6 @@ pub const CLICK_TIME_THRESHOLD: Duration = Duration::from_millis(250);
 // graphics
 pub const TILESIZE: f32 = 100.0;
 pub const HELD_TILESIZE: f32 = 100.0;
-pub const GRID_THICKNESS: f32 = 0.1;
 pub const BLOCK_ROUNDNESS: f32 = 0.3; // 0.0 is a square, 0.5 is a circle
 pub const OUTPUT_OUTLINE_WIDTH: f32 = 10.0;
 pub const SIDEBAR_TILESIZE: f32 = 100.0;

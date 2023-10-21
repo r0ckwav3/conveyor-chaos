@@ -89,32 +89,20 @@ impl event::EventHandler for LevelState {
 
         // draw what the player is holding
 
-        match &mut self.held{
-            Holding::Tile { tile } => {
-                let im = TileType::get_image(ctx, tile.get_type(), HELD_TILESIZE, HELD_TILESIZE*GRID_THICKNESS/2.0)?;
-                let mut drawparam: graphics::DrawParam = glam::vec2(
+        let held_image = match &mut self.held{
+            Holding::Tile { tile } => Some(tile.draw(ctx, HELD_TILESIZE)?),
+            Holding::BlockObject { blockobject } => Some(blockobject.draw(ctx, HELD_TILESIZE)?),
+            Holding::None => None
+        };
+        if let Some(im) = held_image{
+            canvas.draw(
+                &mult_alpha(ctx, im, HELD_OBJECT_ALPHA)?,
+                glam::vec2(
                     ctx.mouse.position().x - HELD_TILESIZE/2.0,
                     ctx.mouse.position().y - HELD_TILESIZE/2.0
-                ).into();
-                drawparam = drawparam.rotation(tile.get_dir().to_rot());
-                drawparam = rot_fix(&mut drawparam, HELD_TILESIZE, HELD_TILESIZE)?;
-                canvas.draw(
-                    &mult_alpha(ctx, im, HELD_OBJECT_ALPHA)?,
-                    drawparam
-                );
-            },
-            Holding::BlockObject { blockobject } => {
-                let im = blockobject.draw(ctx, HELD_TILESIZE)?;
-                canvas.draw(
-                    &mult_alpha(ctx, im, HELD_OBJECT_ALPHA)?,
-                    glam::vec2(
-                        ctx.mouse.position().x - HELD_TILESIZE/2.0,
-                        ctx.mouse.position().y - HELD_TILESIZE/2.0
-                    )
-                );
-            },
-            Holding::None => ()
-        };
+                )
+            );
+        }
 
         canvas.finish(ctx)?;
 

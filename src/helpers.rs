@@ -113,4 +113,13 @@ impl Direction {
             Direction::Up    => pi*1.5
         }
     }
+
+    pub fn to_string(&self) -> &str{
+        match self{
+            Direction::Right => "right",
+            Direction::Down  => "down",
+            Direction::Left  => "left",
+            Direction::Up    => "up"
+        }
+    }
 }

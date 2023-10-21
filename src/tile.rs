@@ -9,6 +9,7 @@ use ggez::{
 use crate::constants::*;
 use crate::asset_cache;
 
+#[derive(Clone)]
 pub struct Tile {
     tiletype: TileType,
     dir: Direction,
@@ -73,35 +74,26 @@ impl Tile{
     pub fn set_dir(&mut self, dir: Direction){
         self.dir = dir;
     }
+
+    pub fn draw(&self, ctx: &mut Context, tilesize: f32) -> GameResult<Image>{
+        let mut image_name = match self.tiletype{
+            TileType::Empty => "empty_tile".to_string(),
+            TileType::PushTile => "push_tile".to_string()
+        };
+
+        if self.tiletype.rotatable(){
+            image_name = image_name + "_" + self.dir.to_string();
+        }
+
+        asset_cache::get_scaled_image(ctx, image_name, tilesize)
+    }
 }
 
-impl TileType{
-    pub fn get_image(ctx: &mut Context, tiletype: TileType, tilesize: f32, border_width: f32) -> GameResult<Image>{
-        let image_name = match tiletype{
-            TileType::Empty => "empty_tile",
-            TileType::PushTile => "push_tile"
-        };
-        let base_image = asset_cache::get_image(ctx, image_name.to_string())?;
-
-        let color_format = ctx.gfx.surface_format();
-        let result_image = Image::new_canvas_image(
-            ctx, color_format,
-            tilesize.ceil() as u32,
-            tilesize.ceil() as u32,
-            1
-        );
-        let mut image_canvas = Canvas::from_image(ctx, result_image.clone(), TRANSPARENT_COLOR);
-
-        image_canvas.draw(
-            &base_image,
-            DrawParam::default().scale(glam::vec2(
-                tilesize / base_image.width() as f32,
-                tilesize / base_image.height() as f32
-            ))
-        );
-
-        image_canvas.finish(ctx)?;
-
-        Ok(result_image)
+impl TileType {
+    fn rotatable(&self) -> bool{
+        match self{
+            TileType::Empty => false,
+            TileType::PushTile => true
+        }
     }
 }

@@ -1,5 +1,3 @@
-use std::time::Duration;
-
 use ggez::{
     glam,
     graphics::{self, Image},
@@ -21,7 +19,7 @@ pub struct Sidebar{
     margin_x: f32,
     margin_y: f32,
     scroll_y: f32,
-    tiles: Vec<TileType>,
+    tiles: Vec<Tile>,
     blockobjects: Vec<BlockObject>,
     rows: Vec<Box<dyn SidebarRow>>
 }
@@ -33,7 +31,7 @@ pub trait SidebarRow{
 }
 
 struct SidebarRowTile{
-    tiles: Vec<TileType>,
+    tiles: Vec<Tile>,
     tilesize: f32,
     padding: f32 // on the side of each tile
 }
@@ -46,6 +44,10 @@ struct SidebarRowBO{
 
 impl Sidebar{
     pub fn new(pos: graphics::Rect, bos: &Vec<BlockObject>) -> GameResult<Sidebar>{
+        let tiles = TILETYPES.iter().map(|tt: &TileType| {
+            Tile::new(*tt, BoardPos{x:0, y:0})
+        }).collect();
+
         let mut new = Sidebar{
             pos,
             tilesize: SIDEBAR_TILESIZE,
@@ -54,8 +56,7 @@ impl Sidebar{
             margin_x: SIDEBAR_MARGING_X,
             margin_y: SIDEBAR_MARGIN_Y,
             scroll_y: 0.0,
-            // tiles: Vec::from(TILETYPES),
-            tiles: vec![TileType::PushTile; 5],
+            tiles,
             blockobjects: bos.clone(),
             rows: Vec::new()
         };
@@ -197,7 +198,7 @@ impl SidebarRow for SidebarRowTile{
         for (i, tile) in self.tiles.iter().enumerate(){
             let xpos = self.padding + (self.tilesize + (2.0 * self.padding)) * i as f32;
             image_canvas.draw(
-                &TileType::get_image(ctx, *tile, self.tilesize, 0.0)?,
+                &tile.draw(ctx, self.tilesize)?,
                 glam::vec2(xpos, 0.0)
             );
         }
@@ -211,11 +212,10 @@ impl SidebarRow for SidebarRowTile{
     }
 
     fn get_held(&mut self, x: f32, _y: f32) -> GameResult<Holding>{
-        for (i, tiletype) in self.tiles.iter().enumerate(){
+        for (i, tile) in self.tiles.iter().enumerate(){
             let xpos = self.padding + (self.tilesize + (2.0 * self.padding)) * i as f32;
-            let temptile = Tile::new(*tiletype, BoardPos{x:0,y:0});
             if x >= xpos && x <= xpos + self.tilesize{
-                return Ok(Holding::Tile { tile: temptile })
+                return Ok(Holding::Tile { tile: tile.clone() })
             }
         }
         Ok(Holding::None)

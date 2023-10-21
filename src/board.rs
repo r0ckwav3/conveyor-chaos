@@ -13,6 +13,7 @@ use crate::tile::{Tile, TileType};
 use crate::block::{Block, BlockObject};
 use crate::constants::*;
 use crate::helpers::*;
+use crate::asset_cache;
 
 enum BoardMode {
     Building,
@@ -29,7 +30,6 @@ pub struct Board {
 struct BoardCanvas {
     pos: graphics::Rect, // where to render it on the screen
     tile_size: f32,
-    grid_thickness: f32, // % of tile size
     offset_x: f32, // the top left corner of the screen should show what's at (offset_x, offset_y)
     offset_y: f32
 }
@@ -67,12 +67,7 @@ impl Board{
 
         // empty tiles
         // TODO: don't render empty tiles under filled tiles
-        let empty_tile_image = TileType::get_image(
-            ctx,
-            TileType::Empty,
-            self.canvas.tile_size,
-            self.canvas.tile_size * self.canvas.grid_thickness/2.0
-        )?;
+        let empty_tile_image = asset_cache::get_scaled_image(ctx, "empty_tile".to_string(), self.canvas.tile_size)?;
 
         let mut empty_tile_ia = graphics::InstanceArray::new(ctx, empty_tile_image);
 
@@ -94,41 +89,20 @@ impl Board{
         image_canvas.draw(&empty_tile_ia, graphics::DrawParam::default());
 
         // filled tiles
-        let mut ia_map = HashMap::new();
-        for tiletype in TILETYPES{
-            let empty_tile_image = TileType::get_image(
-                ctx,
-                TileType::PushTile,
-                self.canvas.tile_size,
-                self.canvas.tile_size * self.canvas.grid_thickness/2.0
-            )?;
+        // I don't think an instance array would actually help here, given that rotations are different images
+        // however, I could draw the bases first and then the symbols if I need the speed
 
-            let empty_tile_ia = Box::new(graphics::InstanceArray::new(ctx, empty_tile_image));
-            ia_map.insert(tiletype, empty_tile_ia);
-        }
         for tile in self.state.tiles.iter(){
             if tile.get_x() >= tilex_min && tile.get_x() <= tilex_max &&
                 tile.get_y() >= tiley_min && tile.get_y() <= tiley_max{
-                let screenpos: graphics::DrawParam = glam::vec2(
-                    tile.get_x() as f32 * self.canvas.tile_size - self.canvas.offset_x,
-                    tile.get_y() as f32 * self.canvas.tile_size - self.canvas.offset_y
-                ).into();
 
-                let mut draw_param = screenpos.rotation(tile.get_dir().to_rot());
-                draw_param = rot_fix(&mut draw_param,self.canvas.tile_size, self.canvas.tile_size)?;
-
-                if let Some(temp_ia) = ia_map.get_mut(&tile.get_type()){
-                    temp_ia.push(draw_param);
-                }else{
-                    return Err(GameError::CustomError(format!("Failed to find InstanceArray for tiletype {:?}", tile.get_type())))
-                }
-            }
-        }
-        for tiletype in TILETYPES{
-            if let Some(temp_ia) = ia_map.get(&tiletype){
-                image_canvas.draw(temp_ia.as_ref(), graphics::DrawParam::default());
-            }else{
-                return Err(GameError::CustomError(format!("Failed to find InstanceArray for tiletype {:?}", tiletype)))
+                image_canvas.draw(
+                    &tile.draw(ctx, self.canvas.tile_size)?,
+                    glam::vec2(
+                        tile.get_x() as f32 * self.canvas.tile_size - self.canvas.offset_x,
+                        tile.get_y() as f32 * self.canvas.tile_size - self.canvas.offset_y
+                    )
+                )
             }
         }
 
@@ -238,7 +212,6 @@ impl BoardCanvas{
         BoardCanvas{
             pos: screenpos,
             tile_size: TILESIZE,
-            grid_thickness: GRID_THICKNESS,
             offset_x: 0.0,
             offset_y: 0.0
         }

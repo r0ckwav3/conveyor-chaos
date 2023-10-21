@@ -1,5 +1,4 @@
-use std::time::Duration;
-use std::path;
+use std::path::Path;
 use std::io;
 use std::fs;
 
@@ -43,7 +42,7 @@ impl LevelState {
     }
 
     pub fn load_level(level_name: &str) -> GameResult<Vec<BlockObject>>{
-        let level_path = path::Path::new("levels").join(level_name).with_extension("json");
+        let level_path = Path::new("levels").join(level_name).with_extension("json");
         let level_string = fs::read_to_string(level_path)
             .map_err(|e: io::Error| GameError::ResourceLoadError(format!("Failed to load level data: {}", e)))?;
 

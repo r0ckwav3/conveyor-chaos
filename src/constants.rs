@@ -26,9 +26,10 @@ pub const SIDEBAR_MARGIN_Y: f32 = 50.0;
 
 // colors
 pub const TRANSPARENT_COLOR: Color = Color::new(0.0, 0.0, 0.0, 0.0);
-pub const BOARD_BG_COLOR: Color = Color::new(0.2, 0.2, 0.2, 1.0);
+pub const BOARD_BG_COLOR: Color = Color::new(106.0/255.0, 86.0/255.0, 73.0/255.0, 1.0);
+pub const TILE_BG_COLOR: Color = Color::new(128.0/255.0, 104.0/255.0, 87.0/255.0, 1.0);
+
 pub const SIDEBAR_BG_COLOR: Color = Color::new(0.5, 0.5, 0.5, 1.0);
-pub const TILE_BG_COLOR: Color = Color::new(0.3, 0.3, 0.3, 1.0);
 pub const TILE_SYMBOL_COLOR: Color = Color::new(0.1, 0.9, 1.0, 1.0);
 pub const BLOCK_COLOR: Color = Color::new(0.9, 0.9, 0.9, 1.0);
 // pub const BLOCK_INNER_COLOR: Color = Color::new(0.8, 0.8, 0.8, 1.0);

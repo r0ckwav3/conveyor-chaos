@@ -1326,6 +1326,7 @@ name = "manufacturing-game"
 version = "0.1.0"
 dependencies = [
  "ggez",
+ "once_cell",
  "serde",
  "serde_json",
 ]

@@ -1,1 +1,8 @@
 /target
+
+# Mac being annoying
+.DS_Store
+
+# image editing software
+*.pxd
+*.pxm

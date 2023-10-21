@@ -2,7 +2,7 @@ use ggez::{
     glam,
     graphics::{self, Image},
     input::mouse::MouseButton,
-    Context, GameResult, GameError
+    Context, GameResult
 };
 
 use crate::level::Holding;

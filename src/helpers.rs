@@ -9,8 +9,6 @@ use ggez::{
 
 use serde::Deserialize;
 
-use crate::block::BlockObject;
-
 #[derive(Clone, Copy, PartialEq, Deserialize)]
 pub struct BoardPos {
     pub x: i32,

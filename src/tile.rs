@@ -1,12 +1,10 @@
 use crate::helpers::*;
 
 use ggez::{
-    glam,
-    graphics::{Image, DrawParam, Canvas},
+    graphics::Image,
     Context, GameResult
 };
 
-use crate::constants::*;
 use crate::asset_cache;
 
 #[derive(Clone)]

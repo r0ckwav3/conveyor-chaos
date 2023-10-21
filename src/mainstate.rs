@@ -1,19 +1,12 @@
 use std::time::Duration;
 
 use ggez::{
-    glam,
     event,
-    graphics,
-    input::{mouse::MouseButton, keyboard::{KeyInput, KeyMods}, keyboard::KeyCode},
+    input::{mouse::MouseButton, keyboard::KeyInput, keyboard::KeyCode},
     Context, GameResult,
 };
 
-use crate::board::Board;
 use crate::level::LevelState;
-use crate::tile::{Tile, TileType};
-use crate::block::{BlockObjectMode, BlockObject, Block};
-use crate::sidebar::Sidebar;
-use crate::helpers::*;
 use crate::constants::*;
 
 pub struct MainState {

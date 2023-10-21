@@ -1,16 +1,14 @@
-use std::collections::HashMap;
-
 use ggez::{
     glam,
     graphics,
     input::mouse::MouseButton,
     input::keyboard::{KeyInput, KeyCode, KeyMods},
-    Context, GameResult, GameError
+    Context, GameResult
 };
 
 use crate::level::Holding;
 use crate::tile::{Tile, TileType};
-use crate::block::{Block, BlockObject};
+use crate::block::BlockObject;
 use crate::constants::*;
 use crate::helpers::*;
 use crate::asset_cache;

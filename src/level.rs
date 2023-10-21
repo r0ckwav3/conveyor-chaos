@@ -11,7 +11,7 @@ use ggez::{
 };
 
 use crate::board::Board;
-use crate::tile::{Tile, TileType};
+use crate::tile::Tile;
 use crate::block::{BlockObjectMode, BlockObject, Block};
 use crate::sidebar::Sidebar;
 use crate::helpers::*;

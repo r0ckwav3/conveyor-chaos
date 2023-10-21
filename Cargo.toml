@@ -1,5 +1,5 @@
 [package]
-name = "manufacturing-game"
+name = "conveyor-chaos"
 version = "0.1.0"
 edition = "2021"
 authors = ["r0ckwav3 peterrockwave@gmail.com"]

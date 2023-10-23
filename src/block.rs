@@ -10,13 +10,13 @@ use crate::constants::*;
 
 #[derive(Copy, Clone)]
 pub struct Block {
-    pos: BoardPos
+    pub pos: BoardPos
 }
 
 // we only use id during the building phase, to ensure only one of each input or output is in the build
 // the id -1 is allowed to have multiple copies
 pub struct BlockObject{
-    blocks: Vec<Block>,
+    pub blocks: Vec<Block>,
     image_cache: Option<graphics::Image>,
     top_left: Option<BoardPos>,
     bottom_right: Option<BoardPos>,
@@ -93,7 +93,7 @@ impl BlockObject{
         }
     }
 
-    fn generate_bounds(&mut self) -> GameResult{
+    pub fn generate_bounds(&mut self) -> GameResult{
         if self.blocks.len() == 0{
             return Err(GameError::RenderError("Cannot render blockobject with no blocks".to_string()));
         }

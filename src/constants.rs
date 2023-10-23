@@ -42,7 +42,7 @@ pub const HELD_OBJECT_ALPHA: f32 = 0.5;
 
 // animation
 // in seconds unless otherwise specified
-pub const ANIMATION_DURATION: f32 = 1.0;
+pub const ANIMATION_DURATION: f32 = 0.4;
 
 // helpers
 // non-empty tile types

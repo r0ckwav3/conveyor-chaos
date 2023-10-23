@@ -9,7 +9,7 @@ use ggez::{
 
 use serde::Deserialize;
 
-#[derive(Clone, Copy, PartialEq, Deserialize)]
+#[derive(Clone, Copy, PartialEq, Eq, Deserialize, Hash)]
 pub struct BoardPos {
     pub x: i32,
     pub y: i32

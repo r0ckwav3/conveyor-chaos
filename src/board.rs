@@ -1,4 +1,5 @@
 use std::time::Duration;
+use std::collections::HashMap;
 
 use ggez::{
     glam,
@@ -33,6 +34,8 @@ struct BoardState {
     animation_timer: Duration,
     tiles: Vec<Tile>,
     blockobjects: Vec<BlockObject>,
+    activeblockobjects: Vec<BlockObject>,
+    id_counter: i32
 }
 
 impl Board{
@@ -110,7 +113,7 @@ impl Board{
         }
 
         // blocks
-        for blockobject in self.state.blockobjects.iter_mut(){
+        for blockobject in self.state.blockobjects.iter_mut().chain(self.state.activeblockobjects.iter_mut()){
             let bo_image = blockobject.draw(ctx, self.canvas.tile_size)?;
             let bo_pos = blockobject.get_top_left()?;
             let screenpos: graphics::DrawParam = glam::vec2(
@@ -254,6 +257,8 @@ impl BoardState{
             animation_timer: Duration::ZERO,
             tiles: Vec::new(),
             blockobjects: Vec::new(),
+            activeblockobjects: Vec::new(),
+            id_counter: 0
         }
     }
 
@@ -325,13 +330,25 @@ impl BoardState{
     }
 
     fn process_start(&mut self) -> GameResult{
+        // init the id_counter as the max of current block objects + 1
+        self.id_counter = 0;
+        for bo in self.blockobjects.iter(){
+            if bo.id > self.id_counter{
+                self.id_counter = bo.id;
+            }
+        }
+        self.id_counter += 1;
+
         // create the initial block objects
-        for i in 0..self.blockobjects.len(){
-            let bo = &self.blockobjects[i];
+        for bo in self.blockobjects.iter(){
             if bo.mode == BlockObjectMode::Input{
                 let mut bocopy = bo.clone();
+
                 bocopy.mode = BlockObjectMode::Processing;
-                self.blockobjects.push(bocopy);
+                bocopy.id = self.id_counter;
+                self.id_counter += 1;
+
+                self.activeblockobjects.push(bocopy);
             }
         }
 
@@ -339,15 +356,11 @@ impl BoardState{
     }
 
     fn process_end(&mut self) -> GameResult{
-        // remove processing blockobjects
-        let mut i = 0;
-        while i < self.blockobjects.len(){
-            if self.blockobjects[i].mode == BlockObjectMode::Processing{
-                self.blockobjects.remove(i);
-            }else{
-                i += 1;
-            }
-        }
+        // reset idcounter
+        self.id_counter = 0;
+
+        // remove active blockobjects
+        self.activeblockobjects.clear();
 
         Ok(())
     }
@@ -355,13 +368,13 @@ impl BoardState{
     fn process_step(&mut self) -> GameResult{
         println!("processing");
 
-        let n = self.blockobjects.len();
+        let n = self.activeblockobjects.len();
         let mut max_priority = vec![0; n];
         let mut relevant_tiles: Vec<Vec<Tile>> = vec![vec![]; n];
 
         // can I make this more efficient?
         for tile in self.tiles.iter(){
-            for (i, blockobject) in self.blockobjects.iter_mut().filter(|bo| bo.mode == BlockObjectMode::Processing).enumerate(){
+            for (i, blockobject) in self.activeblockobjects.iter_mut().enumerate(){
                 if blockobject.overlap_tile(tile.get_pos()){
                     if tile.get_priority() > max_priority[i]{
                         max_priority[i] = tile.get_priority();
@@ -377,7 +390,7 @@ impl BoardState{
         let mut to_move = vec![None; n];
 
         // resolve directions
-        for i in 0..self.blockobjects.len(){
+        for i in 0..self.activeblockobjects.len(){
             //TODO: splitting
             for tile in relevant_tiles[i].iter(){
                 if None == to_move[i]{
@@ -387,6 +400,58 @@ impl BoardState{
                 }
             }
         }
+
+        // TODO: figure out splitting and merging before starting collision detection
+
+        let mut collision_map: HashMap<BoardPos, i32> = HashMap::new();
+        let mut collisions: Vec<BoardPos> = Vec::new();
+
+        // MOVE THOSE FELLAS
+        for i in 0..self.activeblockobjects.len(){
+            let bo = &mut self.activeblockobjects[i];
+            // before move check
+            for block in bo.blocks.iter_mut(){
+                if let Some(current) = collision_map.insert(block.pos, bo.id){
+                    if current != bo.id{
+                        collisions.push(block.pos.clone());
+                    }
+                }
+            }
+
+            // move
+            // println!("attempting to move id:{}", bo.id);
+            match to_move[i]{
+                Some(Direction::Right) => bo.shift(1,0),
+                Some(Direction::Down)  => bo.shift(0,1),
+                Some(Direction::Left)  => bo.shift(-1,0),
+                Some(Direction::Up)    => bo.shift(0,-1),
+                None => ()
+            }
+            bo.generate_bounds()?;
+
+            // after move check
+            for block in bo.blocks.iter_mut(){
+                if let Some(current) = collision_map.insert(block.pos, bo.id){
+                    if current != bo.id{
+                        collisions.push(block.pos.clone());
+                    }
+                }
+            }
+        }
+
+
+        // collision detection
+
+        // ideas:
+        // make a copy of everything moved one block forward
+        // and then check if any new things collide with old things which aren't themselves
+        // ids??
+        //
+        // mark every (relevant) cell with the ids of blocks that move from or to them
+        // then if anything has two ids, we have a collision
+        // also needs ids
+        //
+        // how do we want to do ids?? I probably need a "global counter" which state can store
 
         Ok(())
     }

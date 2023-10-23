@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 use ggez::{
     glam,
     graphics,
@@ -15,8 +17,7 @@ use crate::asset_cache;
 
 enum BoardMode {
     Building,
-    Processing,
-    Animating
+    Running
 }
 
 pub struct Board {
@@ -34,8 +35,8 @@ struct BoardCanvas {
 
 struct BoardState {
     mode: BoardMode,
-    animation_duration: f32,
-    animation_timer: f32,
+    animation_duration: Duration,
+    animation_timer: Duration,
     tiles: Vec<Tile>,
     blockobjects: Vec<BlockObject>,
 }
@@ -49,8 +50,19 @@ impl Board{
         }
     }
 
-    pub fn update(&mut self, _ctx: &mut Context) -> GameResult {
-        Ok(())
+    pub fn update(&mut self, ctx: &mut Context) -> GameResult {
+        // there's a single tick between each animation, which is a bit weird
+        match self.state.mode{
+            BoardMode::Building => Ok(()),
+            BoardMode::Running => {
+                self.state.animation_timer += ctx.time.delta();
+                while self.state.animation_timer >= self.state.animation_duration{
+                    self.state.animation_timer -= self.state.animation_duration;
+                    self.state.process_step()?;
+                }
+                Ok(())
+            }
+        }
     }
 
     pub fn draw(&mut self, ctx: &mut Context, out_canvas: &mut graphics::Canvas) -> GameResult {
@@ -200,6 +212,17 @@ impl Board{
             }
         }else if input.keycode == Some(KeyCode::D) {
             self.state.remove_tile(tile_pos);
+        }else if input.keycode == Some(KeyCode::Return){
+            match self.state.mode{
+                BoardMode::Building => {
+                    self.state.process_reset()?;
+                    self.state.mode = BoardMode::Running;
+                }
+                BoardMode::Running => {
+                    self.state.process_reset()?;
+                    self.state.mode = BoardMode::Building;
+                }
+            }
         }
         Ok(())
     }
@@ -229,8 +252,8 @@ impl BoardState{
     fn new() -> BoardState {
         BoardState{
             mode: BoardMode::Building,
-            animation_duration: ANIMATION_DURATION,
-            animation_timer: 0.0,
+            animation_duration: Duration::from_secs_f32(ANIMATION_DURATION),
+            animation_timer: Duration::ZERO,
             tiles: Vec::new(),
             blockobjects: Vec::new(),
         }
@@ -300,6 +323,16 @@ impl BoardState{
 
 
         self.blockobjects.push(blockobject);
+        Ok(())
+    }
+
+    fn process_reset(&mut self) -> GameResult{
+        println!("resetting");
+        Ok(())
+    }
+
+    fn process_step(&mut self) -> GameResult{
+        println!("processing");
         Ok(())
     }
 }

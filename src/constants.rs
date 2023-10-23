@@ -40,6 +40,7 @@ pub const BUILDING_BLOCKOBJECT_ALPHA: f32 = 0.8;
 pub const HELD_OBJECT_ALPHA: f32 = 0.5;
 
 // animation
+// in seconds unless otherwise specified
 pub const ANIMATION_DURATION: f32 = 1.0;
 
 // helpers

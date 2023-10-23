@@ -211,13 +211,11 @@ impl Board{
     }
 
     pub fn process_start(&mut self) -> GameResult{
-        self.state.process_start();
-        Ok(())
+        self.state.process_start()
     }
 
     pub fn process_end(&mut self) -> GameResult{
-        self.state.process_start();
-        Ok(())
+        self.state.process_end()
     }
 }
 
@@ -339,7 +337,7 @@ impl BoardState{
             if self.blockobjects[i].mode == BlockObjectMode::Processing{
                 self.blockobjects.remove(i);
             }else{
-                i += i;
+                i += 1;
             }
         }
 

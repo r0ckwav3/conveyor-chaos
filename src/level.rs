@@ -171,14 +171,14 @@ impl LevelState{
 
         self.held = Holding::None;
 
-        self.board.process_start();
+        self.board.process_start()?;
         Ok(())
     }
 
     fn process_end(&mut self) -> GameResult{
         println!("ending");
 
-        self.board.process_start();
+        self.board.process_end()?;
         Ok(())
     }
 }

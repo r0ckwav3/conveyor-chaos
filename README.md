@@ -10,6 +10,6 @@ In Conveyor Chaos, use a set of suprisingly versitile conveyor belts to merge, s
 - [ ] All the tiles/tools
 - [ ] Multiple Levels
 - [ ] A menu and stuff
-- [ ] Better Textures
+- [X] Better Textures
 - [ ] In game tutorial
 - [ ] Whatever else I want if I'm still working on this project

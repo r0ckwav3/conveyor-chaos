@@ -17,7 +17,9 @@ pub struct Tile {
 #[derive(Eq, PartialEq, Hash, Debug, Clone, Copy)]
 pub enum TileType{
     Empty,
-    PushTile
+    PushTile,
+    PrioTile,
+    AltTile
 }
 
 impl Tile{
@@ -75,9 +77,11 @@ impl Tile{
 
     pub fn draw(&self, ctx: &mut Context, tilesize: f32) -> GameResult<Image>{
         let mut image_name = match self.tiletype{
-            TileType::Empty => "empty_tile".to_string(),
-            TileType::PushTile => "push_tile".to_string()
-        };
+            TileType::Empty => "empty_tile",
+            TileType::PushTile => "push_tile",
+            TileType::PrioTile => "prio_tile",
+            TileType::AltTile => "alt_tile"
+        }.to_string();
 
         if self.tiletype.rotatable(){
             image_name = image_name + "_" + self.dir.to_string();
@@ -91,7 +95,9 @@ impl TileType {
     fn rotatable(&self) -> bool{
         match self{
             TileType::Empty => false,
-            TileType::PushTile => true
+            TileType::PushTile => true,
+            TileType::PrioTile => true,
+            TileType::AltTile => true
         }
     }
 }

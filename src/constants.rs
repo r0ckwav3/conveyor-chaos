@@ -44,4 +44,4 @@ pub const ANIMATION_DURATION: f32 = 1.0;
 
 // helpers
 // non-empty tile types
-pub const TILETYPES: [TileType; 1] = [TileType::PushTile];
+pub const TILETYPES: [TileType; 3] = [TileType::PushTile, TileType::PrioTile, TileType::AltTile];

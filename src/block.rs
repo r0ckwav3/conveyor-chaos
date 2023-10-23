@@ -218,6 +218,24 @@ impl BlockObject{
         false
     }
 
+    pub fn overlap_tile(&mut self, pos: BoardPos) -> bool{
+        let zeropos = BoardPos{x:0,y:0};
+        let tl = self.get_top_left().unwrap_or(zeropos);
+        let br = self.get_bottom_right().unwrap_or(zeropos);
+        let xoverlap = br.x >= pos.x && pos.x >= tl.x;
+        let yoverlap = br.y >= pos.y && pos.y >= tl.y;
+
+        // try to avoid this since it's o(n)
+        if xoverlap && yoverlap{
+            for sblock in self.blocks.iter(){
+                if sblock.pos == pos{
+                    return true;
+                }
+            }
+        }
+        false
+    }
+
     pub fn rotate_cw(&mut self, around: BoardPos){
         for block in self.blocks.iter_mut(){
             block.rotate_cw(around);

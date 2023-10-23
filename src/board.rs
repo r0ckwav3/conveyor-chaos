@@ -139,7 +139,7 @@ impl Board{
 
     pub fn mouse_button_down_event(
         &mut self,
-        ctx: &mut Context,
+        _ctx: &mut Context,
         button: MouseButton,
         x: f32,
         y: f32
@@ -354,6 +354,40 @@ impl BoardState{
 
     fn process_step(&mut self) -> GameResult{
         println!("processing");
+
+        let n = self.blockobjects.len();
+        let mut max_priority = vec![0; n];
+        let mut relevant_tiles: Vec<Vec<Tile>> = vec![vec![]; n];
+
+        // can I make this more efficient?
+        for tile in self.tiles.iter(){
+            for (i, blockobject) in self.blockobjects.iter_mut().filter(|bo| bo.mode == BlockObjectMode::Processing).enumerate(){
+                if blockobject.overlap_tile(tile.get_pos()){
+                    if tile.get_priority() > max_priority[i]{
+                        max_priority[i] = tile.get_priority();
+                        relevant_tiles[i].clear();
+                    }
+                    if tile.get_priority() == max_priority[i]{
+                        relevant_tiles[i].push(tile.clone());
+                    }
+                }
+            }
+        }
+
+        let mut to_move = vec![None; n];
+
+        // resolve directions
+        for i in 0..self.blockobjects.len(){
+            //TODO: splitting
+            for tile in relevant_tiles[i].iter(){
+                if None == to_move[i]{
+                    to_move[i] = Some(tile.get_dir());
+                } else if Some(tile.get_dir()) != to_move[i]{
+                    panic!("PUT BETTER ERROR HANDLING HERE")
+                }
+            }
+        }
+
         Ok(())
     }
 }

@@ -89,6 +89,16 @@ impl Tile{
 
         asset_cache::get_scaled_image(ctx, image_name, tilesize)
     }
+
+    // big numbers are high priority
+    pub fn get_priority(&self) -> u8{
+        match self.tiletype{
+            TileType::Empty => 0,
+            TileType::PushTile => 2,
+            TileType::PrioTile => 3,
+            TileType::AltTile => 1
+        }
+    }
 }
 
 impl TileType {

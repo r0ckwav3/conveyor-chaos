@@ -70,7 +70,6 @@ impl Board{
         let mut image_canvas = graphics::Canvas::from_image(ctx, image.clone(), BOARD_BG_COLOR);
 
         // empty tiles
-        // TODO: don't render empty tiles under filled tiles
         let empty_tile_image = asset_cache::get_scaled_image(ctx, "empty_tile".to_string(), self.canvas.tile_size)?;
 
         let mut empty_tile_ia = graphics::InstanceArray::new(ctx, empty_tile_image);
@@ -119,7 +118,16 @@ impl Board{
                 bo_pos.y as f32 * self.canvas.tile_size - self.canvas.offset_y
             ).into();
 
-            image_canvas.draw(&mult_alpha(ctx, bo_image, BUILDING_BLOCKOBJECT_ALPHA)?, screenpos);
+            match (blockobject.mode, mode){
+                (BlockObjectMode::Input, LevelMode::Building) =>
+                    image_canvas.draw(&mult_alpha(ctx, bo_image, BUILDING_BLOCKOBJECT_ALPHA)?, screenpos),
+                (BlockObjectMode::Output, _) =>
+                    image_canvas.draw(&bo_image, screenpos),
+                (BlockObjectMode::Processing, LevelMode::Running) =>
+                    image_canvas.draw(&mult_alpha(ctx, bo_image, RUNNING_BLOCKOBJECT_ALPHA)?, screenpos),
+                _default => ()
+            }
+
         }
 
 

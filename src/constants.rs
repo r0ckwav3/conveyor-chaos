@@ -36,7 +36,8 @@ pub const OUTPUT_BLOCK_COLOR: Color = Color::new(0.0, 0.0, 0.0, 1.0);
 pub const OUTPUT_OUTLINE_COLOR: Color = Color::new(0.7, 0.2, 0.2, 1.0);
 
 // alpha values
-pub const BUILDING_BLOCKOBJECT_ALPHA: f32 = 0.8;
+pub const BUILDING_BLOCKOBJECT_ALPHA: f32 = 0.5;
+pub const RUNNING_BLOCKOBJECT_ALPHA: f32 = 0.8;
 pub const HELD_OBJECT_ALPHA: f32 = 0.5;
 
 // animation

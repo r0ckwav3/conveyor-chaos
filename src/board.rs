@@ -318,7 +318,7 @@ impl BoardState{
 
     fn process_start(&mut self) -> GameResult{
         // create the initial block objects
-        for i in 1..self.blockobjects.len(){
+        for i in 0..self.blockobjects.len(){
             let bo = &self.blockobjects[i];
             if bo.mode == BlockObjectMode::Input{
                 let mut bocopy = bo.clone();

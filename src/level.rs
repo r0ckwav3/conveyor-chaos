@@ -160,7 +160,10 @@ impl event::EventHandler for LevelState {
                 }
             }
         }
-        self.board.key_down_event(ctx, input, repeated)?;
+
+        if let LevelMode::Building = self.mode{
+            self.board.key_down_event(ctx, input, repeated)?;
+        }
         Ok(())
     }
 }

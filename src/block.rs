@@ -20,11 +20,11 @@ pub struct BlockObject{
     image_cache: Option<graphics::Image>,
     top_left: Option<BoardPos>,
     bottom_right: Option<BoardPos>,
-    mode: BlockObjectMode,
-    id: i32
+    pub mode: BlockObjectMode,
+    pub id: i32
 }
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, PartialEq)]
 pub enum BlockObjectMode{
     Input,
     Output,
@@ -91,14 +91,6 @@ impl BlockObject{
             let pos = self.bottom_right.expect("Failed to cache bounds");
             Ok(pos)
         }
-    }
-
-    pub fn get_id(&self) -> i32{
-        return self.id;
-    }
-
-    pub fn set_id(&mut self, id: i32){
-        return self.id = id;
     }
 
     fn generate_bounds(&mut self) -> GameResult{

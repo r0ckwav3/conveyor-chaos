@@ -10,7 +10,7 @@ use ggez::{
 
 use crate::level::Holding;
 use crate::tile::{Tile, TileType};
-use crate::block::BlockObject;
+use crate::block::{BlockObject, BlockObjectMode};
 use crate::constants::*;
 use crate::helpers::*;
 use crate::asset_cache;
@@ -215,11 +215,11 @@ impl Board{
         }else if input.keycode == Some(KeyCode::Return){
             match self.state.mode{
                 BoardMode::Building => {
-                    self.state.process_reset()?;
+                    self.state.process_start()?;
                     self.state.mode = BoardMode::Running;
                 }
                 BoardMode::Running => {
-                    self.state.process_reset()?;
+                    self.state.process_end()?;
                     self.state.mode = BoardMode::Building;
                 }
             }
@@ -311,7 +311,7 @@ impl BoardState{
         // remove everything with matching ids
         let mut i = 0;
         while i < self.blockobjects.len(){
-            if blockobject.get_id() != -1 && self.blockobjects[i].get_id() == blockobject.get_id(){
+            if blockobject.id != -1 && self.blockobjects[i].id == blockobject.id{
                 self.blockobjects.remove(i);
             }else if self.blockobjects[i].has_overlap(&mut blockobject){
                 self.blockobjects.remove(i);
@@ -326,8 +326,35 @@ impl BoardState{
         Ok(())
     }
 
-    fn process_reset(&mut self) -> GameResult{
-        println!("resetting");
+    fn process_start(&mut self) -> GameResult{
+        println!("beginning");
+
+        // create the initial block objects
+        for i in 1..self.blockobjects.len(){
+            let bo = &self.blockobjects[i];
+            if bo.mode == BlockObjectMode::Input{
+                let mut bocopy = bo.clone();
+                bocopy.mode = BlockObjectMode::Processing;
+                self.blockobjects.push(bocopy);
+            }
+        }
+
+        Ok(())
+    }
+
+    fn process_end(&mut self) -> GameResult{
+        println!("ending");
+
+        // remove processing blockobjects
+        let mut i = 0;
+        while i < self.blockobjects.len(){
+            if self.blockobjects[i].mode == BlockObjectMode::Processing{
+                self.blockobjects.remove(i);
+            }else{
+                i += i;
+            }
+        }
+
         Ok(())
     }
 

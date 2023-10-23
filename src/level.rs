@@ -21,7 +21,13 @@ use crate::mainstate::SceneState;
 pub struct LevelState {
     board: Board,
     sidebar: Sidebar,
-    held: Holding
+    held: Holding,
+    mode: LevelMode
+}
+
+pub enum LevelMode {
+    Building,
+    Running
 }
 
 pub enum Holding {
@@ -37,7 +43,8 @@ impl LevelState {
         Ok(LevelState {
             board: Board::new(BOARD_POS),
             sidebar: Sidebar::new(SIDEBAR_POS, &blockobjects)?,
-            held: Holding::None
+            held: Holding::None,
+            mode: LevelMode::Building
         })
     }
 
@@ -69,23 +76,25 @@ impl LevelState {
 
 impl SceneState for LevelState {
     fn mouse_click_event(&mut self, ctx: &mut Context, button: MouseButton, x: f32, y: f32) -> GameResult{
-        self.board.mouse_click_event(ctx,button,x,y,&mut self.held)?;
-        self.sidebar.mouse_click_event(ctx,button,x,y,&mut self.held)?;
+        if let LevelMode::Building = self.mode{
+            self.board.mouse_click_event(ctx,button,x,y,&mut self.held)?;
+            self.sidebar.mouse_click_event(ctx,button,x,y,&mut self.held)?;
+        }
         Ok(())
     }
 }
 
 impl event::EventHandler for LevelState {
     fn update(&mut self, ctx: &mut Context) -> GameResult {
-        self.board.update(ctx)?;
+        self.board.update(ctx, &self.mode)?;
         Ok(())
     }
 
     fn draw(&mut self, ctx: &mut Context) -> GameResult {
         let mut canvas = graphics::Canvas::from_frame(ctx, graphics::Color::new(1.0, 0.0, 1.0, 1.0));
 
-        self.board.draw(ctx, &mut canvas)?;
-        self.sidebar.draw(ctx, &mut canvas)?;
+        self.board.draw(ctx, &mut canvas, &self.mode)?;
+        self.sidebar.draw(ctx, &mut canvas, &self.mode)?;
 
         // draw what the player is holding
 
@@ -139,8 +148,37 @@ impl event::EventHandler for LevelState {
                     _other => ()
                 }
             }
+        }else if input.keycode == Some(KeyCode::Return){
+            match self.mode{
+                LevelMode::Building => {
+                    self.process_start()?;
+                    self.mode = LevelMode::Running;
+                }
+                LevelMode::Running => {
+                    self.process_end()?;
+                    self.mode = LevelMode::Building;
+                }
+            }
         }
         self.board.key_down_event(ctx, input, repeated)?;
+        Ok(())
+    }
+}
+
+impl LevelState{
+    fn process_start(&mut self) -> GameResult{
+        println!("beginning");
+
+        self.held = Holding::None;
+
+        self.board.process_start();
+        Ok(())
+    }
+
+    fn process_end(&mut self) -> GameResult{
+        println!("ending");
+
+        self.board.process_start();
         Ok(())
     }
 }

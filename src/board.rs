@@ -8,17 +8,12 @@ use ggez::{
     Context, GameResult
 };
 
-use crate::level::Holding;
+use crate::level::{Holding, LevelMode};
 use crate::tile::{Tile, TileType};
 use crate::block::{BlockObject, BlockObjectMode};
 use crate::constants::*;
 use crate::helpers::*;
 use crate::asset_cache;
-
-enum BoardMode {
-    Building,
-    Running
-}
 
 pub struct Board {
     mouse_down: bool,
@@ -34,7 +29,6 @@ struct BoardCanvas {
 }
 
 struct BoardState {
-    mode: BoardMode,
     animation_duration: Duration,
     animation_timer: Duration,
     tiles: Vec<Tile>,
@@ -50,11 +44,11 @@ impl Board{
         }
     }
 
-    pub fn update(&mut self, ctx: &mut Context) -> GameResult {
+    pub fn update(&mut self, ctx: &mut Context, mode: &LevelMode) -> GameResult {
         // there's a single tick between each animation, which is a bit weird
-        match self.state.mode{
-            BoardMode::Building => Ok(()),
-            BoardMode::Running => {
+        match mode{
+            LevelMode::Building => Ok(()),
+            LevelMode::Running => {
                 self.state.animation_timer += ctx.time.delta();
                 while self.state.animation_timer >= self.state.animation_duration{
                     self.state.animation_timer -= self.state.animation_duration;
@@ -65,7 +59,7 @@ impl Board{
         }
     }
 
-    pub fn draw(&mut self, ctx: &mut Context, out_canvas: &mut graphics::Canvas) -> GameResult {
+    pub fn draw(&mut self, ctx: &mut Context, out_canvas: &mut graphics::Canvas, mode: &LevelMode) -> GameResult {
         let color_format = ctx.gfx.surface_format();
         let image = graphics::Image::new_canvas_image(
             ctx, color_format,
@@ -212,18 +206,17 @@ impl Board{
             }
         }else if input.keycode == Some(KeyCode::D) {
             self.state.remove_tile(tile_pos);
-        }else if input.keycode == Some(KeyCode::Return){
-            match self.state.mode{
-                BoardMode::Building => {
-                    self.state.process_start()?;
-                    self.state.mode = BoardMode::Running;
-                }
-                BoardMode::Running => {
-                    self.state.process_end()?;
-                    self.state.mode = BoardMode::Building;
-                }
-            }
         }
+        Ok(())
+    }
+
+    pub fn process_start(&mut self) -> GameResult{
+        self.state.process_start();
+        Ok(())
+    }
+
+    pub fn process_end(&mut self) -> GameResult{
+        self.state.process_start();
         Ok(())
     }
 }
@@ -251,7 +244,6 @@ impl BoardCanvas{
 impl BoardState{
     fn new() -> BoardState {
         BoardState{
-            mode: BoardMode::Building,
             animation_duration: Duration::from_secs_f32(ANIMATION_DURATION),
             animation_timer: Duration::ZERO,
             tiles: Vec::new(),
@@ -327,8 +319,6 @@ impl BoardState{
     }
 
     fn process_start(&mut self) -> GameResult{
-        println!("beginning");
-
         // create the initial block objects
         for i in 1..self.blockobjects.len(){
             let bo = &self.blockobjects[i];
@@ -343,8 +333,6 @@ impl BoardState{
     }
 
     fn process_end(&mut self) -> GameResult{
-        println!("ending");
-
         // remove processing blockobjects
         let mut i = 0;
         while i < self.blockobjects.len(){

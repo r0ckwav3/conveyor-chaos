@@ -5,7 +5,7 @@ use ggez::{
     Context, GameResult
 };
 
-use crate::level::Holding;
+use crate::level::{Holding, LevelMode};
 use crate::tile::{Tile, TileType};
 use crate::block::BlockObject;
 use crate::constants::*;
@@ -115,7 +115,7 @@ impl Sidebar{
         Ok(())
     }
 
-    pub fn draw(&mut self, ctx: &mut Context, out_canvas: &mut graphics::Canvas) -> GameResult {
+    pub fn draw(&mut self, ctx: &mut Context, out_canvas: &mut graphics::Canvas, _mode: &LevelMode) -> GameResult {
         let color_format = ctx.gfx.surface_format();
         let image = graphics::Image::new_canvas_image(
             ctx, color_format,

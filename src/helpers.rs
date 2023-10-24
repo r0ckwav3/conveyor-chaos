@@ -9,7 +9,7 @@ use ggez::{
 
 use serde::Deserialize;
 
-#[derive(Clone, Copy, PartialEq, Eq, Deserialize, Hash)]
+#[derive(Clone, Copy, PartialEq, Eq, Deserialize, Hash, Debug)]
 pub struct BoardPos {
     pub x: i32,
     pub y: i32
@@ -28,6 +28,13 @@ pub struct SerializedBlockObject{
     pub input: bool,
     pub blocks: Vec<BoardPos>
 }
+
+pub struct SimulationError{
+    pub message: String,
+    pub relevant_locations: Vec<BoardPos>
+}
+
+pub type SimulationResult<T = ()> = Result<T, SimulationError>;
 
 // takes in a DrawParam and adjusts the dest so that that the original dest point is now the actual top left corner
 // assumes offset is 0, causes unexpected behavior otherwise

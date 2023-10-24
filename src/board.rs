@@ -47,9 +47,8 @@ impl Board{
         }
     }
 
-    pub fn update(&mut self, ctx: &mut Context, mode: &LevelMode) -> GameResult {
-        // there's a single tick between each animation, which is a bit weird
-        match mode{
+    pub fn update(&mut self, ctx: &mut Context, mode: &LevelMode) -> SimulationResult {
+        match *mode{
             LevelMode::Building => Ok(()),
             LevelMode::Running => {
                 self.state.animation_timer += ctx.time.delta();
@@ -365,7 +364,7 @@ impl BoardState{
         Ok(())
     }
 
-    fn process_step(&mut self) -> GameResult{
+    fn process_step(&mut self) -> SimulationResult{
         println!("processing");
 
         let n = self.activeblockobjects.len();
@@ -396,7 +395,10 @@ impl BoardState{
                 if None == to_move[i]{
                     to_move[i] = Some(tile.get_dir());
                 } else if Some(tile.get_dir()) != to_move[i]{
-                    panic!("PUT BETTER ERROR HANDLING HERE")
+                    return Err(SimulationError{
+                        message: "Attempted to move block in multiple directions".to_string(),
+                        relevant_locations: relevant_tiles[i].iter().map(|tile| tile.get_pos()).collect()
+                    })
                 }
             }
         }
@@ -427,7 +429,7 @@ impl BoardState{
                 Some(Direction::Up)    => bo.shift(0,-1),
                 None => ()
             }
-            bo.generate_bounds()?;
+            bo.generate_bounds().map_err(|e| SimulationError{message: e.to_string(), relevant_locations: vec![]})?;
 
             // after move check
             for block in bo.blocks.iter_mut(){
@@ -439,19 +441,12 @@ impl BoardState{
             }
         }
 
-
-        // collision detection
-
-        // ideas:
-        // make a copy of everything moved one block forward
-        // and then check if any new things collide with old things which aren't themselves
-        // ids??
-        //
-        // mark every (relevant) cell with the ids of blocks that move from or to them
-        // then if anything has two ids, we have a collision
-        // also needs ids
-        //
-        // how do we want to do ids?? I probably need a "global counter" which state can store
+        if collisions.len() != 0{
+            return Err(SimulationError{
+                message: "Collision occured".to_string(),
+                relevant_locations: collisions
+            })
+        }
 
         Ok(())
     }

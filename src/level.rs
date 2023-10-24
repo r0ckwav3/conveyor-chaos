@@ -86,7 +86,12 @@ impl SceneState for LevelState {
 
 impl event::EventHandler for LevelState {
     fn update(&mut self, ctx: &mut Context) -> GameResult {
-        self.board.update(ctx, &self.mode)?;
+        let sim_result = self.board.update(ctx, &self.mode);
+        if let Err(sim_err) = sim_result{
+            println!("{}: {:?}", sim_err.message, sim_err.relevant_locations);
+            self.mode = LevelMode::Building; // TODO: add Error state where the player can see the error message
+            self.board.process_end()?;
+        }
         Ok(())
     }
 

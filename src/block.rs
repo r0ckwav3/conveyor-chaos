@@ -21,7 +21,8 @@ pub struct BlockObject{
     top_left: Option<BoardPos>,
     bottom_right: Option<BoardPos>,
     pub mode: BlockObjectMode,
-    pub id: i32
+    pub id: i32,
+    pub anim: BlockObjectAnimation
 }
 
 #[derive(Copy, Clone, PartialEq)]
@@ -29,6 +30,12 @@ pub enum BlockObjectMode{
     Input,
     Output,
     Processing
+}
+
+#[derive(Copy, Clone)]
+pub enum BlockObjectAnimation{
+    Translation{x: f32, y:f32},
+    Rotation{theta: f32, around: BoardPos}
 }
 
 impl BlockObject{
@@ -39,7 +46,8 @@ impl BlockObject{
             top_left: None,
             bottom_right: None,
             mode: BlockObjectMode::Processing,
-            id: -1
+            id: -1,
+            anim: BlockObjectAnimation::Translation{x:0.0, y:0.0}
         }
     }
 
@@ -50,15 +58,16 @@ impl BlockObject{
             top_left: None,
             bottom_right: None,
             mode,
-            id: -1
+            id: -1,
+            anim: BlockObjectAnimation::Translation{x:0.0, y:0.0}
         }
     }
 
     // pub fn merge(a:BlockObject, b:BlockObject) -> BlockObject{}
 
-    pub fn shift(&mut self, dx: i32, dy: i32){
+    pub fn translate(&mut self, dx: i32, dy: i32){
         for block in self.blocks.iter_mut(){
-            block.shift(dx, dy);
+            block.translate(dx, dy);
         }
         let _ = self.generate_bounds();
     }
@@ -259,7 +268,8 @@ impl Clone for BlockObject{
             top_left: None,
             bottom_right: None,
             mode: self.mode,
-            id: self.id
+            id: self.id,
+            anim: self.anim.clone()
         }
     }
 }
@@ -271,7 +281,7 @@ impl Block{
         }
     }
 
-    pub fn shift(&mut self, dx: i32, dy: i32){
+    pub fn translate(&mut self, dx: i32, dy: i32){
         self.pos.x += dx;
         self.pos.y += dy;
     }

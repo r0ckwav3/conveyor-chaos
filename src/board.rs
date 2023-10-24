@@ -11,7 +11,7 @@ use ggez::{
 
 use crate::level::{Holding, LevelMode};
 use crate::tile::{Tile, TileType};
-use crate::block::{BlockObject, BlockObjectMode};
+use crate::block::{BlockObject, BlockObjectMode, BlockObjectAnimation};
 use crate::constants::*;
 use crate::helpers::*;
 use crate::asset_cache;
@@ -115,10 +115,21 @@ impl Board{
         for blockobject in self.state.blockobjects.iter_mut().chain(self.state.activeblockobjects.iter_mut()){
             let bo_image = blockobject.draw(ctx, self.canvas.tile_size)?;
             let bo_pos = blockobject.get_top_left()?;
-            let screenpos: graphics::DrawParam = glam::vec2(
+            let mut screenpos = glam::vec2(
                 bo_pos.x as f32 * self.canvas.tile_size - self.canvas.offset_x,
                 bo_pos.y as f32 * self.canvas.tile_size - self.canvas.offset_y
-            ).into();
+            );
+
+            let animation_proportion = self.state.animation_timer.as_secs_f32()/self.state.animation_duration.as_secs_f32();
+            match blockobject.anim{
+                BlockObjectAnimation::Translation { x, y } => {
+                    screenpos.x += x * self.canvas.tile_size * (animation_proportion - 1.0);
+                    screenpos.y += y * self.canvas.tile_size * (animation_proportion - 1.0);
+                },
+                BlockObjectAnimation::Rotation { theta, around } => {
+                    panic!("do this at some point");
+                }
+            }
 
             match (blockobject.mode, mode){
                 (BlockObjectMode::Input, LevelMode::Building) =>
@@ -308,7 +319,7 @@ impl BoardState{
 
     fn place_blockobject(&mut self, mut blockobject: BlockObject, pos: BoardPos) -> GameResult{
         let tl = blockobject.get_top_left()?;
-        blockobject.shift(pos.x - tl.x, pos.y - tl.y);
+        blockobject.translate(pos.x - tl.x, pos.y - tl.y);
 
         // remove everything with matching ids
         let mut i = 0;
@@ -422,13 +433,17 @@ impl BoardState{
 
             // move
             // println!("attempting to move id:{}", bo.id);
+            let dx: i32;
+            let dy: i32;
             match to_move[i]{
-                Some(Direction::Right) => bo.shift(1,0),
-                Some(Direction::Down)  => bo.shift(0,1),
-                Some(Direction::Left)  => bo.shift(-1,0),
-                Some(Direction::Up)    => bo.shift(0,-1),
-                None => ()
+                Some(Direction::Right) => {dx = 1; dy = 0},
+                Some(Direction::Down)  => {dx = 0; dy = 1},
+                Some(Direction::Left)  => {dx = -1; dy = 0},
+                Some(Direction::Up)    => {dx = 0; dy = -1},
+                None                   => {dx = 0; dy = 0},
             }
+            bo.translate(dx,dy);
+            bo.anim = BlockObjectAnimation::Translation {x: dx as f32, y: dy as f32};
             bo.generate_bounds().map_err(|e| SimulationError{message: e.to_string(), relevant_locations: vec![]})?;
 
             // after move check

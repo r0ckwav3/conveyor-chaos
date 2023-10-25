@@ -47,16 +47,18 @@ impl Board{
         }
     }
 
-    pub fn update(&mut self, ctx: &mut Context, mode: &LevelMode) -> SimulationResult {
+    pub fn update(&mut self, ctx: &mut Context, mode: &LevelMode) -> SimulationResult<bool> {
         match *mode{
-            LevelMode::Building => Ok(()),
+            LevelMode::Building => Ok(false),
             LevelMode::Running => {
                 self.state.animation_timer += ctx.time.delta();
                 while self.state.animation_timer >= self.state.animation_duration{
                     self.state.animation_timer -= self.state.animation_duration;
-                    self.state.process_step()?;
+                    if self.state.process_step()?{
+                        return Ok(true)
+                    }
                 }
-                Ok(())
+                Ok(false)
             }
         }
     }
@@ -369,8 +371,19 @@ impl BoardState{
         Ok(())
     }
 
-    fn process_step(&mut self) -> SimulationResult{
+    // returning true means we won
+    fn process_step(&mut self) -> SimulationResult<bool>{
         println!("processing");
+        // did we win?
+        let mut winning = true;
+        for out in self.blockobjects.iter().filter(|bo| bo.mode == BlockObjectMode::Output){
+            if out.counter != 0{
+                winning = false;
+            }
+        }
+        if winning{
+            return Ok(true);
+        }
 
         let n = self.activeblockobjects.len();
         let mut max_priority = vec![0; n];
@@ -547,6 +560,6 @@ impl BoardState{
             move_dir.remove(i);
         }
 
-        Ok(())
+        Ok(false)
     }
 }

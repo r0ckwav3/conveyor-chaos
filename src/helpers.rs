@@ -2,7 +2,7 @@ use ggez::{
     GameResult,
     GameError,
     Context,
-    graphics::{self,DrawParam,Transform,Image},
+    graphics::{self,DrawParam,Transform,Image,Color},
     glam::{Mat2, vec2},
     mint::Point2
 };
@@ -95,6 +95,21 @@ pub fn mult_alpha(ctx: &mut Context, im: Image, alpha: f32) -> GameResult<Image>
 
     image_canvas.finish(ctx)?;
     Ok(image)
+
+}
+
+// 0 is all color1, 1 is all color2
+pub fn weighted_color_ave(color1: Color, color2: Color, proportion: f32) -> GameResult<Color>{
+    if proportion < 0.0 || proportion > 1.0{
+        Err(GameError::CustomError(format!("weighted average cannot use proportion {}, must be between 0 and 1", proportion)))
+    }else{
+        Ok(Color{
+            r: (color1.r * (1.0 - proportion)) + (color2.r * proportion),
+            g: (color1.g * (1.0 - proportion)) + (color2.g * proportion),
+            b: (color1.b * (1.0 - proportion)) + (color2.b * proportion),
+            a: (color1.a * (1.0 - proportion)) + (color2.a * proportion)
+        })
+    }
 
 }
 

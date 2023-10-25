@@ -121,15 +121,21 @@ impl Board{
             );
 
             let animation_proportion = self.state.animation_timer.as_secs_f32()/self.state.animation_duration.as_secs_f32();
-            match blockobject.anim{
+            let param: graphics::DrawParam = match blockobject.anim{
                 BlockObjectAnimation::Translation { x, y } => {
                     screenpos.x += x * self.canvas.tile_size * (animation_proportion - 1.0);
                     screenpos.y += y * self.canvas.tile_size * (animation_proportion - 1.0);
+                    screenpos.into()
                 },
                 BlockObjectAnimation::Rotation { theta, around } => {
                     panic!("do this at some point");
+                    screenpos.into()
+                },
+                BlockObjectAnimation::Output => {
+                    // TODO: think of some fun animation to do here
+                    screenpos.into()
                 }
-            }
+            };
 
             match (blockobject.mode, mode){
                 (BlockObjectMode::Input, LevelMode::Building) =>
@@ -345,6 +351,7 @@ impl BoardState{
                 let mut bocopy = bo.clone();
 
                 bocopy.mode = BlockObjectMode::Processing;
+                bocopy.just_moved = true; // make delay blocks work more intuitively
 
                 self.activeblockobjects.push(bocopy);
             }
@@ -397,6 +404,11 @@ impl BoardState{
                     })
                 }
             }
+        }
+
+        // reset just_moved
+        for bo in self.activeblockobjects.iter_mut(){
+            bo.just_moved = false;
         }
 
         // merge check
@@ -485,6 +497,11 @@ impl BoardState{
             bo.anim = BlockObjectAnimation::Translation {x: dx as f32, y: dy as f32};
             bo.generate_bounds().map_err(|e| SimulationError::from_string(e.to_string()))?;
 
+            // set just_moved
+            if let Some(_) = move_dir[i]{
+                bo.just_moved = true;
+            }
+
             // after move check
             for block in bo.blocks.iter_mut(){
                 if let Some(current) = collision_map.insert(block.pos, i){
@@ -500,6 +517,25 @@ impl BoardState{
                 message: "Collision occured".to_string(),
                 relevant_locations: collisions
             })
+        }
+
+        // erase things on outputs
+        let mut to_remove: Vec<usize> = vec![];
+        for i in 0..self.activeblockobjects.len(){
+            if self.activeblockobjects[i].just_moved{
+                continue;
+            }
+            for out in self.blockobjects.iter_mut().filter(|bo| bo.mode == BlockObjectMode::Output){
+                if out.exact_overlap(&mut self.activeblockobjects[i]){
+                    out.anim = BlockObjectAnimation::Output;
+                    to_remove.push(i);
+                }
+            }
+        }
+        to_remove.sort_unstable_by_key(|i| -(*i as i64));
+        for i in to_remove{
+            self.activeblockobjects.remove(i);
+            move_dir.remove(i);
         }
 
         Ok(())

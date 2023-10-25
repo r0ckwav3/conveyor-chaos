@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use ggez::{
     glam,
     graphics,
@@ -15,14 +17,17 @@ pub struct Block {
 
 // we only use id during the building phase, to ensure only one of each input or output is in the build
 // the id -1 is allowed to have multiple copies
+// the counter is used in input and output blocks for amount expected in and out
 pub struct BlockObject{
     pub blocks: Vec<Block>,
-    image_cache: Option<graphics::Image>,
-    top_left: Option<BoardPos>,
-    bottom_right: Option<BoardPos>,
     pub mode: BlockObjectMode,
     pub id: i32,
-    pub anim: BlockObjectAnimation
+    pub anim: BlockObjectAnimation,
+    pub counter: i32,
+    pub just_moved: bool,
+    image_cache: Option<graphics::Image>,
+    top_left: Option<BoardPos>,
+    bottom_right: Option<BoardPos>
 }
 
 #[derive(Copy, Clone, PartialEq)]
@@ -35,7 +40,8 @@ pub enum BlockObjectMode{
 #[derive(Copy, Clone)]
 pub enum BlockObjectAnimation{
     Translation{x: f32, y:f32},
-    Rotation{theta: f32, around: BoardPos}
+    Rotation{theta: f32, around: BoardPos},
+    Output
 }
 
 impl BlockObject{
@@ -47,7 +53,9 @@ impl BlockObject{
             bottom_right: None,
             mode: BlockObjectMode::Processing,
             id: -1,
-            anim: BlockObjectAnimation::Translation{x:0.0, y:0.0}
+            anim: BlockObjectAnimation::Translation{x:0.0, y:0.0},
+            counter: 0,
+            just_moved: true
         }
     }
 
@@ -59,7 +67,9 @@ impl BlockObject{
             bottom_right: None,
             mode,
             id: -1,
-            anim: BlockObjectAnimation::Translation{x:0.0, y:0.0}
+            anim: BlockObjectAnimation::Translation{x:0.0, y:0.0},
+            counter: 0,
+            just_moved: true
         }
     }
 
@@ -220,11 +230,10 @@ impl BlockObject{
 
         // try to avoid this since it's o(n^2)
         if xoverlap && yoverlap{
-            for sblock in self.blocks.iter(){
-                for oblock in other.blocks.iter(){
-                    if sblock.pos == oblock.pos{
-                        return true;
-                    }
+            let overlap_map = self.get_overlap_map(other);
+            for (pos, (a, b)) in overlap_map.iter(){
+                if *a && *b {
+                    return true;
                 }
             }
         }
@@ -247,6 +256,47 @@ impl BlockObject{
             }
         }
         false
+    }
+
+    pub fn exact_overlap(&mut self, other: &mut Self) -> bool{
+        let zeropos = BoardPos{x:0,y:0};
+        let stl = self.get_top_left().unwrap_or(zeropos);
+        let sbr = self.get_bottom_right().unwrap_or(zeropos);
+        let otl = other.get_top_left().unwrap_or(zeropos);
+        let obr = other.get_bottom_right().unwrap_or(zeropos);
+        let xoverlap = sbr.x >= otl.x && obr.x >= stl.x;
+        let yoverlap = sbr.y >= otl.y && obr.y >= stl.y;
+
+        if xoverlap && yoverlap{
+            let overlap_map = self.get_overlap_map(other);
+            for (pos, (a, b)) in overlap_map.iter(){
+                if(*a && !b) || (*b && !a){
+                    return false;
+                }
+            }
+            true
+        }else{
+            false
+        }
+    }
+
+    fn get_overlap_map(&mut self, other: &mut Self) -> HashMap<BoardPos, (bool, bool)>{
+        let mut overlap_map: HashMap<BoardPos, (bool, bool)> = HashMap::new();
+        for block in self.blocks.iter(){
+            let to_insert = match overlap_map.get(&block.pos){
+                None => (true, false),
+                Some((a, b)) => (true, *b)
+            };
+            overlap_map.insert(block.pos, to_insert);
+        }
+        for block in other.blocks.iter(){
+            let to_insert = match overlap_map.get(&block.pos){
+                None => (false, true),
+                Some((a, b)) => (*a, true)
+            };
+            overlap_map.insert(block.pos, to_insert);
+        }
+        overlap_map
     }
 
     pub fn rotate_cw(&mut self, around: BoardPos){
@@ -273,7 +323,9 @@ impl Clone for BlockObject{
             bottom_right: None,
             mode: self.mode,
             id: self.id,
-            anim: self.anim.clone()
+            anim: self.anim.clone(),
+            counter: self.counter,
+            just_moved: self.just_moved
         }
     }
 }

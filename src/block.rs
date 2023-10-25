@@ -231,7 +231,7 @@ impl BlockObject{
         // try to avoid this since it's o(n^2)
         if xoverlap && yoverlap{
             let overlap_map = self.get_overlap_map(other);
-            for (pos, (a, b)) in overlap_map.iter(){
+            for (_pos, (a, b)) in overlap_map.iter(){
                 if *a && *b {
                     return true;
                 }
@@ -269,7 +269,7 @@ impl BlockObject{
 
         if xoverlap && yoverlap{
             let overlap_map = self.get_overlap_map(other);
-            for (pos, (a, b)) in overlap_map.iter(){
+            for (_pos, (a, b)) in overlap_map.iter(){
                 if(*a && !b) || (*b && !a){
                     return false;
                 }
@@ -285,14 +285,14 @@ impl BlockObject{
         for block in self.blocks.iter(){
             let to_insert = match overlap_map.get(&block.pos){
                 None => (true, false),
-                Some((a, b)) => (true, *b)
+                Some((_a, b)) => (true, *b)
             };
             overlap_map.insert(block.pos, to_insert);
         }
         for block in other.blocks.iter(){
             let to_insert = match overlap_map.get(&block.pos){
                 None => (false, true),
-                Some((a, b)) => (*a, true)
+                Some((a, _b)) => (*a, true)
             };
             overlap_map.insert(block.pos, to_insert);
         }

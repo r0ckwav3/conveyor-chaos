@@ -127,7 +127,7 @@ impl Board{
                     screenpos.y += y * self.canvas.tile_size * (animation_proportion - 1.0);
                     screenpos.into()
                 },
-                BlockObjectAnimation::Rotation { theta, around } => {
+                BlockObjectAnimation::Rotation { theta: _, around: _ } => {
                     panic!("do this at some point");
                     screenpos.into()
                 },
@@ -139,11 +139,11 @@ impl Board{
 
             match (blockobject.mode, mode){
                 (BlockObjectMode::Input, LevelMode::Building) =>
-                    image_canvas.draw(&mult_alpha(ctx, bo_image, BUILDING_BLOCKOBJECT_ALPHA)?, screenpos),
+                    image_canvas.draw(&mult_alpha(ctx, bo_image, BUILDING_BLOCKOBJECT_ALPHA)?, param),
                 (BlockObjectMode::Output, _) =>
-                    image_canvas.draw(&bo_image, screenpos),
+                    image_canvas.draw(&bo_image, param),
                 (BlockObjectMode::Processing, LevelMode::Running) =>
-                    image_canvas.draw(&mult_alpha(ctx, bo_image, RUNNING_BLOCKOBJECT_ALPHA)?, screenpos),
+                    image_canvas.draw(&mult_alpha(ctx, bo_image, RUNNING_BLOCKOBJECT_ALPHA)?, param),
                 _default => ()
             }
 

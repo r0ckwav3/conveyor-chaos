@@ -165,8 +165,15 @@ impl event::EventHandler for LevelState {
         }else if input.keycode == Some(KeyCode::Return){
             match self.mode{
                 LevelMode::Building => {
-                    self.process_start()?;
-                    self.mode = LevelMode::Running;
+                    // everything has been placed
+                    if self.sidebar.num_blockobjects() == self.board.num_blockobjects(){
+                        self.process_start()?;
+                        self.mode = LevelMode::Running;
+                    }else{
+                        // TODO: display this to the player somehow
+                        // could use the error state if I want
+                        println!("Please place all inputs and outputs first")
+                    }
                 }
                 LevelMode::Running => {
                     self.process_end()?;

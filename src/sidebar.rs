@@ -169,6 +169,10 @@ impl Sidebar{
         }
         Ok(())
     }
+
+    pub fn num_blockobjects(&self) -> usize{
+        self.blockobjects.len()
+    }
 }
 
 impl SidebarRowTile{

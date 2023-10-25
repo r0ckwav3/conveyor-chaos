@@ -17,4 +17,3 @@ In Conveyor Chaos, use a set of suprisingly versitile conveyor belts to merge, s
 
 ## Known bugs
  - Rotating a held tile will also rotate the tile you are hovering over.
- - Not placing any outputs results in the player instantly winning

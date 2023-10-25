@@ -246,6 +246,10 @@ impl Board{
     pub fn process_end(&mut self) -> GameResult{
         self.state.process_end()
     }
+
+    pub fn num_blockobjects(&self) -> usize{
+        self.state.blockobjects.len()
+    }
 }
 
 impl BoardCanvas{

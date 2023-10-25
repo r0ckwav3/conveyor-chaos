@@ -8,6 +8,7 @@ In Conveyor Chaos, use a set of suprisingly versitile conveyor belts to merge, s
 - [ ] Fully functional solution simulator
 - [ ] Tutorial (probably just in a markdown file)
 - [ ] All the tiles/tools
+- [ ] Win and Error States
 - [ ] Multiple Levels
 - [ ] A menu and stuff
 - [X] Better Textures
@@ -16,3 +17,4 @@ In Conveyor Chaos, use a set of suprisingly versitile conveyor belts to merge, s
 
 ## Known bugs
  - Rotating a held tile will also rotate the tile you are hovering over.
+ - Not placing any outputs results in the player instantly winning

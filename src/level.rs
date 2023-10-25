@@ -65,6 +65,7 @@ impl LevelState {
                 blocks.push(Block::new(*pos))
             }
             let mut bo = BlockObject::from_blocklist(blocks, mode);
+            bo.start_counter = sbo.counter;
             bo.id = id_counter;
             id_counter += 1;
             out.push(bo);

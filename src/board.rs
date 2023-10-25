@@ -346,7 +346,8 @@ impl BoardState{
 
     fn process_start(&mut self) -> GameResult{
         // create the initial block objects
-        for bo in self.blockobjects.iter(){
+        // also reset the counters
+        for bo in self.blockobjects.iter_mut(){
             if bo.mode == BlockObjectMode::Input{
                 let mut bocopy = bo.clone();
 
@@ -355,6 +356,7 @@ impl BoardState{
 
                 self.activeblockobjects.push(bocopy);
             }
+            bo.counter = bo.start_counter;
         }
 
         Ok(())
@@ -528,6 +530,13 @@ impl BoardState{
             for out in self.blockobjects.iter_mut().filter(|bo| bo.mode == BlockObjectMode::Output){
                 if out.exact_overlap(&mut self.activeblockobjects[i]){
                     out.anim = BlockObjectAnimation::Output;
+                    out.counter -= 1;
+                    if out.counter < 0{
+                        return Err(SimulationError{
+                            message: format!("Too many objects in one output (expected {})", out.start_counter),
+                            relevant_locations: out.block_locations()
+                        })
+                    }
                     to_remove.push(i);
                 }
             }

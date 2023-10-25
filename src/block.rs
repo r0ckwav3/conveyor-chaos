@@ -23,6 +23,7 @@ pub struct BlockObject{
     pub mode: BlockObjectMode,
     pub id: i32,
     pub anim: BlockObjectAnimation,
+    pub start_counter: i32,
     pub counter: i32,
     pub just_moved: bool,
     image_cache: Option<graphics::Image>,
@@ -54,6 +55,7 @@ impl BlockObject{
             mode: BlockObjectMode::Processing,
             id: -1,
             anim: BlockObjectAnimation::Translation{x:0.0, y:0.0},
+            start_counter: 0,
             counter: 0,
             just_moved: true
         }
@@ -69,6 +71,7 @@ impl BlockObject{
             id: -1,
             anim: BlockObjectAnimation::Translation{x:0.0, y:0.0},
             counter: 0,
+            start_counter: 0,
             just_moved: true
         }
     }
@@ -312,6 +315,14 @@ impl BlockObject{
         }
         self.reset_cache();
     }
+
+    pub fn block_locations(&self) -> Vec<BoardPos>{
+        let mut ans = Vec::new();
+        for block in self.blocks.iter(){
+            ans.push(block.pos)
+        }
+        ans
+    }
 }
 
 impl Clone for BlockObject{
@@ -325,6 +336,7 @@ impl Clone for BlockObject{
             id: self.id,
             anim: self.anim.clone(),
             counter: self.counter,
+            start_counter: self.start_counter,
             just_moved: self.just_moved
         }
     }

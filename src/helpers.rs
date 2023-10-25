@@ -26,7 +26,8 @@ pub enum Direction{
 #[derive(Deserialize)]
 pub struct SerializedBlockObject{
     pub input: bool,
-    pub blocks: Vec<BoardPos>
+    pub blocks: Vec<BoardPos>,
+    pub counter: i32
 }
 
 pub struct SimulationError{

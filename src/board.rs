@@ -1,5 +1,6 @@
 use std::time::Duration;
 use std::collections::HashMap;
+use std::collections::HashSet;
 
 use ggez::{
     glam,
@@ -397,15 +398,15 @@ impl BoardState{
             }
         }
 
-        let mut to_move = vec![None; n];
+        let mut move_dir = vec![None; n];
 
         // resolve directions
         for i in 0..self.activeblockobjects.len(){
             //TODO: splitting
             for tile in relevant_tiles[i].iter(){
-                if None == to_move[i]{
-                    to_move[i] = Some(tile.get_dir());
-                } else if Some(tile.get_dir()) != to_move[i]{
+                if None == move_dir[i]{
+                    move_dir[i] = Some(tile.get_dir());
+                } else if Some(tile.get_dir()) != move_dir[i]{
                     return Err(SimulationError{
                         message: "Attempted to move block in multiple directions".to_string(),
                         relevant_locations: relevant_tiles[i].iter().map(|tile| tile.get_pos()).collect()
@@ -414,7 +415,67 @@ impl BoardState{
             }
         }
 
-        // TODO: figure out splitting and merging before starting collision detection
+        // merge check
+        // I could do a DSU, but the speed of this is so small anyways
+        let mut merge_groups: Vec<HashSet<usize>> = Vec::new();
+        for i in 0..self.activeblockobjects.len(){
+            for j in 0..self.activeblockobjects.len(){
+                let itl = self.activeblockobjects[i].get_top_left().map_err(|e| SimulationError::from_string(e.to_string()))?;
+                let ibr = self.activeblockobjects[i].get_bottom_right().map_err(|e| SimulationError::from_string(e.to_string()))?;
+                let jtl = self.activeblockobjects[j].get_top_left().map_err(|e| SimulationError::from_string(e.to_string()))?;
+                let jbr = self.activeblockobjects[j].get_bottom_right().map_err(|e| SimulationError::from_string(e.to_string()))?;
+
+                let can_merge = match (move_dir[i], move_dir[j]){
+                    (Some(Direction::Up), Some(Direction::Down)) => (ibr.x >= jtl.x && jbr.x >= itl.x) && (jbr.y == itl.y - 1),
+                    (Some(Direction::Left), Some(Direction::Right)) => (ibr.y >= jtl.y && jbr.y >= itl.y) && (jbr.x == itl.x - 1),
+                    _default => false
+                };
+
+                if can_merge{
+                    let mut found_group = false;
+                    for group in merge_groups.iter_mut(){
+                        if group.contains(&i){
+                            found_group = true;
+                            group.insert(j);
+                        } else if group.contains(&j){
+                            found_group = true;
+                            group.insert(i);
+                        }
+                    }
+
+                    if !found_group{
+                        let mut tempset = HashSet::new();
+                        tempset.insert(i);
+                        tempset.insert(j);
+                        merge_groups.push(tempset);
+                    }
+                }
+            }
+        }
+
+        // resolve merges
+        let mut to_remove: Vec<usize> = vec![];
+        for group in merge_groups.into_iter(){
+            let mut merged_group = BlockObject::new();
+            merged_group.id = self.id_counter;
+            self.id_counter += 1;
+            for i in group.into_iter(){
+                merged_group.merge(&mut self.activeblockobjects[i]);
+                to_remove.push(i);
+            }
+            self.activeblockobjects.push(merged_group);
+            move_dir.push(None);
+        }
+        to_remove.sort_unstable_by_key(|i| -(*i as i64));
+        for i in to_remove{
+            self.activeblockobjects.remove(i);
+            move_dir.remove(i);
+        }
+
+        // TODO: do I need ids to be constant across ticks, because if not I can use index for collision
+
+
+        // TODO: figure out splitting before starting collision detection
 
         let mut collision_map: HashMap<BoardPos, i32> = HashMap::new();
         let mut collisions: Vec<BoardPos> = Vec::new();
@@ -435,7 +496,7 @@ impl BoardState{
             // println!("attempting to move id:{}", bo.id);
             let dx: i32;
             let dy: i32;
-            match to_move[i]{
+            match move_dir[i]{
                 Some(Direction::Right) => {dx = 1; dy = 0},
                 Some(Direction::Down)  => {dx = 0; dy = 1},
                 Some(Direction::Left)  => {dx = -1; dy = 0},
@@ -444,7 +505,7 @@ impl BoardState{
             }
             bo.translate(dx,dy);
             bo.anim = BlockObjectAnimation::Translation {x: dx as f32, y: dy as f32};
-            bo.generate_bounds().map_err(|e| SimulationError{message: e.to_string(), relevant_locations: vec![]})?;
+            bo.generate_bounds().map_err(|e| SimulationError::from_string(e.to_string()))?;
 
             // after move check
             for block in bo.blocks.iter_mut(){

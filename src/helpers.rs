@@ -34,6 +34,15 @@ pub struct SimulationError{
     pub relevant_locations: Vec<BoardPos>
 }
 
+impl SimulationError{
+    pub fn from_string(message: String) -> SimulationError{
+        SimulationError{
+            message,
+            relevant_locations: vec![]
+        }
+    }
+}
+
 pub type SimulationResult<T = ()> = Result<T, SimulationError>;
 
 // takes in a DrawParam and adjusts the dest so that that the original dest point is now the actual top left corner

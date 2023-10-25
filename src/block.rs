@@ -63,7 +63,11 @@ impl BlockObject{
         }
     }
 
-    // pub fn merge(a:BlockObject, b:BlockObject) -> BlockObject{}
+    // steals blocks from other
+    pub fn merge(&mut self, other: &mut BlockObject){
+        self.blocks.append(&mut other.blocks);
+        self.reset_cache();
+    }
 
     pub fn translate(&mut self, dx: i32, dy: i32){
         for block in self.blocks.iter_mut(){
@@ -211,8 +215,8 @@ impl BlockObject{
         let sbr = self.get_bottom_right().unwrap_or(zeropos);
         let otl = other.get_top_left().unwrap_or(zeropos);
         let obr = other.get_bottom_right().unwrap_or(zeropos);
-        let xoverlap = sbr.x >= otl.x || obr.x >= stl.x;
-        let yoverlap = sbr.y >= otl.y || obr.y >= stl.y;
+        let xoverlap = sbr.x >= otl.x && obr.x >= stl.x;
+        let yoverlap = sbr.y >= otl.y && obr.y >= stl.y;
 
         // try to avoid this since it's o(n^2)
         if xoverlap && yoverlap{

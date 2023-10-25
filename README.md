@@ -6,9 +6,18 @@ In Conveyor Chaos, use a set of suprisingly versitile conveyor belts to merge, s
 ## Roadmap
 - [X] Barebones Solution Editor
 - [ ] Fully functional solution simulator
-- [ ] Tutorial (probably just in a markdown file)
+  - [X] Pushing
+  - [X] Priority
+  - [X] Merging
+  - [ ] Splitting
+  - [X] Output
+  - [ ] Repeating Inputs
 - [ ] All the tiles/tools
-- [ ] Win and Error States
+  - [ ] Rotation
+  - [ ] Delay tiles
+  - [ ] Alternating tiles
+- [ ] Tutorial (probably just in a markdown file in this repo)
+- [ ] Better Win and Error States
 - [ ] Multiple Levels
 - [ ] A menu and stuff
 - [X] Better Textures

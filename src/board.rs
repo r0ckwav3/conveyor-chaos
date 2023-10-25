@@ -36,7 +36,6 @@ struct BoardState {
     tiles: Vec<Tile>,
     blockobjects: Vec<BlockObject>,
     activeblockobjects: Vec<BlockObject>,
-    id_counter: i32
 }
 
 impl Board{
@@ -269,7 +268,6 @@ impl BoardState{
             tiles: Vec::new(),
             blockobjects: Vec::new(),
             activeblockobjects: Vec::new(),
-            id_counter: 0
         }
     }
 
@@ -341,23 +339,12 @@ impl BoardState{
     }
 
     fn process_start(&mut self) -> GameResult{
-        // init the id_counter as the max of current block objects + 1
-        self.id_counter = 0;
-        for bo in self.blockobjects.iter(){
-            if bo.id > self.id_counter{
-                self.id_counter = bo.id;
-            }
-        }
-        self.id_counter += 1;
-
         // create the initial block objects
         for bo in self.blockobjects.iter(){
             if bo.mode == BlockObjectMode::Input{
                 let mut bocopy = bo.clone();
 
                 bocopy.mode = BlockObjectMode::Processing;
-                bocopy.id = self.id_counter;
-                self.id_counter += 1;
 
                 self.activeblockobjects.push(bocopy);
             }
@@ -367,9 +354,6 @@ impl BoardState{
     }
 
     fn process_end(&mut self) -> GameResult{
-        // reset idcounter
-        self.id_counter = 0;
-
         // remove active blockobjects
         self.activeblockobjects.clear();
 
@@ -457,8 +441,6 @@ impl BoardState{
         let mut to_remove: Vec<usize> = vec![];
         for group in merge_groups.into_iter(){
             let mut merged_group = BlockObject::new();
-            merged_group.id = self.id_counter;
-            self.id_counter += 1;
             for i in group.into_iter(){
                 merged_group.merge(&mut self.activeblockobjects[i]);
                 to_remove.push(i);
@@ -472,12 +454,9 @@ impl BoardState{
             move_dir.remove(i);
         }
 
-        // TODO: do I need ids to be constant across ticks, because if not I can use index for collision
-
-
         // TODO: figure out splitting before starting collision detection
 
-        let mut collision_map: HashMap<BoardPos, i32> = HashMap::new();
+        let mut collision_map: HashMap<BoardPos, usize> = HashMap::new();
         let mut collisions: Vec<BoardPos> = Vec::new();
 
         // MOVE THOSE FELLAS
@@ -485,15 +464,14 @@ impl BoardState{
             let bo = &mut self.activeblockobjects[i];
             // before move check
             for block in bo.blocks.iter_mut(){
-                if let Some(current) = collision_map.insert(block.pos, bo.id){
-                    if current != bo.id{
+                if let Some(current) = collision_map.insert(block.pos, i){
+                    if current != i{
                         collisions.push(block.pos.clone());
                     }
                 }
             }
 
             // move
-            // println!("attempting to move id:{}", bo.id);
             let dx: i32;
             let dy: i32;
             match move_dir[i]{
@@ -509,8 +487,8 @@ impl BoardState{
 
             // after move check
             for block in bo.blocks.iter_mut(){
-                if let Some(current) = collision_map.insert(block.pos, bo.id){
-                    if current != bo.id{
+                if let Some(current) = collision_map.insert(block.pos, i){
+                    if current != i{
                         collisions.push(block.pos.clone());
                     }
                 }

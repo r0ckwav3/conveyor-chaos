@@ -13,3 +13,6 @@ In Conveyor Chaos, use a set of suprisingly versitile conveyor belts to merge, s
 - [X] Better Textures
 - [ ] In game tutorial
 - [ ] Whatever else I want if I'm still working on this project
+
+## Known bugs
+ - Rotating a held tile will also rotate the tile you are hovering over.

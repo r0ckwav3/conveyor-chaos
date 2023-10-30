@@ -1,0 +1,40 @@
+[
+  {
+    "input": true,
+    "blocks": [
+      {"x": 0,"y": 0},
+      {"x": 0,"y": 1},
+      {"x": 1,"y": 0},
+      {"x": 1,"y": 1}
+    ],
+    "counter": 1
+  },
+  {
+    "input": false,
+    "blocks": [
+      {"x": 0,"y": 0}
+    ],
+    "counter": 1
+  },
+  {
+    "input": false,
+    "blocks": [
+      {"x": 0,"y": 0}
+    ],
+    "counter": 1
+  },
+  {
+    "input": false,
+    "blocks": [
+      {"x": 0,"y": 0}
+    ],
+    "counter": 1
+  },
+  {
+    "input": false,
+    "blocks": [
+      {"x": 0,"y": 0}
+    ],
+    "counter": 1
+  }
+]

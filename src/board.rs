@@ -469,6 +469,47 @@ impl BoardState{
                         move_dir[i] = Some(Direction::Left);
                         move_dir.push(Some(Direction::Right));
                     }
+                } else if relevant_tiles[i][0].get_dir() == Direction::Up || relevant_tiles[i][0].get_dir() == Direction::Down{
+                    good = true;
+                    let seam = match relevant_tiles[i][0].get_dir(){
+                        Direction::Up => relevant_tiles[i][0].get_pos().y,
+                        Direction::Down => relevant_tiles[i][0].get_pos().y-1,
+                        _default => panic!("this should be impossible")
+                    };
+
+                    // are all tiles on the correct side of the seam?
+                    for tile in relevant_tiles[i].iter(){
+                        match tile.get_dir(){
+                            Direction::Up => {good = good && (tile.get_pos().y <= seam)}
+                            Direction::Down => {good = good && (tile.get_pos().y > seam)}
+                            _default => {good = false;}
+                        }
+                    }
+                    if good{
+                        // do we have the whole seam covered
+                        let mut sides_covered = HashMap::new();
+                        for x in self.activeblockobjects[i].get_hori_seam(seam){
+                            sides_covered.insert(x, (false, false));
+                        }
+                        for tile in relevant_tiles[i].iter(){
+                            if tile.get_pos().y == seam{
+                                sides_covered.get_mut(&tile.get_pos().x).map(|p| p.0 = true);
+                            } else if tile.get_pos().y == seam + 1{
+                                sides_covered.get_mut(&tile.get_pos().x).map(|p| p.1 = true);
+                            }
+                        }
+                        for (_k, v) in sides_covered{
+                            if v != (true, true){
+                                good = false;
+                            }
+                        }
+                    }
+                    if good{
+                        let new_bo = self.activeblockobjects[i].split_hori_seam(seam);
+                        self.activeblockobjects.push(new_bo);
+                        move_dir[i] = Some(Direction::Up);
+                        move_dir.push(Some(Direction::Down));
+                    }
                 }
                 if !good{
                     return Err(SimulationError{

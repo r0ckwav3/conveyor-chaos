@@ -323,6 +323,81 @@ impl BlockObject{
         }
         ans
     }
+
+    // return all places where there is a block at x and x+1
+    pub fn get_vert_seam(&self, x: i32) -> Vec<i32>{
+        let mut seam_map: HashMap<i32, (bool, bool)> = HashMap::new();
+        for block in self.blocks.iter(){
+            if block.pos.x == x{
+                seam_map.get_mut(&block.pos.y).map(|p| p.0 = true);
+            }
+            if block.pos.x == x+1{
+                seam_map.get_mut(&block.pos.y).map(|p| p.1 = true);
+            }
+        }
+
+        let mut ans: Vec<i32> = Vec::new();
+        for (k, v) in seam_map{
+            if v == (true, true){
+                ans.push(k);
+            }
+        }
+        ans
+    }
+
+    pub fn get_hori_seam(&self, y: i32) -> Vec<i32>{
+        let mut seam_map: HashMap<i32, (bool, bool)> = HashMap::new();
+        for block in self.blocks.iter(){
+            if block.pos.y == y{
+                let mut curr = *seam_map.get(&block.pos.x).unwrap_or(&(false, false));
+                curr.0 = true;
+                seam_map.insert(block.pos.x, curr);
+            }
+            if block.pos.y == y+1{
+                let mut curr = *seam_map.get(&block.pos.x).unwrap_or(&(false, false));
+                curr.1 = true;
+                seam_map.insert(block.pos.x, curr);
+            }
+        }
+
+        let mut ans: Vec<i32> = Vec::new();
+        for (k, v) in seam_map{
+            if v == (true, true){
+                ans.push(k);
+            }
+        }
+        ans
+    }
+
+    // transforms into left part, returns right
+    pub fn split_vert_seam(&mut self, x: i32) -> Self{
+        let mut other_blocks = vec![];
+        let mut i = 0;
+        while i < self.blocks.len(){
+            if self.blocks[i].pos.x > x{
+                other_blocks.push(self.blocks.remove(i));
+            }else{
+                i += 1
+            }
+        }
+        self.reset_cache();
+        Self::from_blocklist(other_blocks, BlockObjectMode::Processing)
+    }
+
+    // transforms into top part, returns bottom
+    pub fn split_hori_seam(&mut self, y: i32) -> Self{
+        let mut other_blocks = vec![];
+        let mut i = 0;
+        while i < self.blocks.len(){
+            if self.blocks[i].pos.y > y{
+                other_blocks.push(self.blocks.remove(i));
+            }else{
+                i += 1
+            }
+        }
+        self.reset_cache();
+        Self::from_blocklist(other_blocks, BlockObjectMode::Processing)
+    }
 }
 
 impl Clone for BlockObject{

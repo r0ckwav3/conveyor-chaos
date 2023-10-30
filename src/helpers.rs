@@ -15,7 +15,7 @@ pub struct BoardPos {
     pub y: i32
 }
 
-#[derive(Clone, Copy, PartialEq)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
 pub enum Direction{
     Up,
     Down,

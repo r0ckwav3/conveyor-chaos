@@ -408,19 +408,77 @@ impl BoardState{
             }
         }
 
-        let mut move_dir = vec![None; n];
+        let mut move_dirs: Vec<HashSet<Direction>> = vec![HashSet::new(); n];
+        let mut move_dir: Vec<Option<Direction>> = vec![None; n];
 
-        // resolve directions
+        // list all directions
         for i in 0..self.activeblockobjects.len(){
             //TODO: splitting
             for tile in relevant_tiles[i].iter(){
-                if None == move_dir[i]{
-                    move_dir[i] = Some(tile.get_dir());
-                } else if Some(tile.get_dir()) != move_dir[i]{
+                move_dirs[i].insert(tile.get_dir());
+            }
+        }
+
+        // resolve directions which will potentially split
+        for i in 0..self.activeblockobjects.len(){
+            if move_dirs[i].len() == 0 {
+                move_dir[i] = None;
+            } else if move_dirs[i].len() == 1 {
+                let temp: Vec<&Direction> = move_dirs[i].iter().collect();
+                move_dir[i] = Some(*temp[0]);
+            } else {
+                println!("DEBUG 1");
+                let mut good = false;
+                if relevant_tiles[i][0].get_dir() == Direction::Left || relevant_tiles[i][0].get_dir() == Direction::Right{
+                    good = true;
+                    let seam = match relevant_tiles[i][0].get_dir(){
+                        Direction::Left => relevant_tiles[i][0].get_pos().x,
+                        Direction::Right => relevant_tiles[i][0].get_pos().x-1,
+                        _default => panic!("this should be impossible")
+                    };
+                    println!("DEBUG 2 {}", seam);
+
+                    // are all tiles on the correct side of the seam?
+                    for tile in relevant_tiles[i].iter(){
+                        println!("DEBUG 2.5: {:?}, {:?}", tile.get_dir(), tile.get_pos());
+                        match tile.get_dir(){
+                            Direction::Left => {good = good && (tile.get_pos().x <= seam)}
+                            Direction::Right => {good = good && (tile.get_pos().x > seam)}
+                            _default => {good = false;}
+                        }
+                    }
+                    if good{
+                        println!("DEBUG 3");
+                        // do we have the whole seam covered
+                        let mut sides_covered = HashMap::new();
+                        for y in self.activeblockobjects[i].get_vert_seam(seam){
+                            sides_covered.insert(y, (false, false));
+                        }
+                        for tile in relevant_tiles[i].iter(){
+                            if tile.get_pos().x == seam{
+                                sides_covered.get_mut(&tile.get_pos().y).map(|p| p.0 = true);
+                            } else if tile.get_pos().x == seam + 1{
+                                sides_covered.get_mut(&tile.get_pos().y).map(|p| p.1 = true);
+                            }
+                        }
+                        for (_k, v) in sides_covered{
+                            if v != (true, true){
+                                good = false;
+                            }
+                        }
+                    }
+                    if good{
+                        let new_bo = self.activeblockobjects[i].split_vert_seam(seam);
+                        self.activeblockobjects.push(new_bo);
+                        move_dir[i] = Some(Direction::Left);
+                        move_dir.push(Some(Direction::Right));
+                    }
+                }
+                if !good{
                     return Err(SimulationError{
                         message: "Attempted to move block in multiple directions".to_string(),
                         relevant_locations: relevant_tiles[i].iter().map(|tile| tile.get_pos()).collect()
-                    })
+                    });
                 }
             }
         }

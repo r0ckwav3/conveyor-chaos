@@ -435,11 +435,9 @@ impl BoardState{
                         Direction::Right => relevant_tiles[i][0].get_pos().x-1,
                         _default => panic!("this should be impossible")
                     };
-                    println!("DEBUG 2 {}", seam);
 
                     // are all tiles on the correct side of the seam?
                     for tile in relevant_tiles[i].iter(){
-                        println!("DEBUG 2.5: {:?}, {:?}", tile.get_dir(), tile.get_pos());
                         match tile.get_dir(){
                             Direction::Left => {good = good && (tile.get_pos().x <= seam)}
                             Direction::Right => {good = good && (tile.get_pos().x > seam)}
@@ -447,10 +445,8 @@ impl BoardState{
                         }
                     }
                     if good{
-                        println!("DEBUG 3");
                         // do we have the whole seam covered
                         let mut sides_covered = HashMap::new();
-                        println!("DEBUG 4 {:?}", self.activeblockobjects[i].get_vert_seam(seam));
                         for y in self.activeblockobjects[i].get_vert_seam(seam){
                             sides_covered.insert(y, (false, false));
                         }

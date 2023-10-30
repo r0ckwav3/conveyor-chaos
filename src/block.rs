@@ -341,7 +341,6 @@ impl BlockObject{
                 );
             }
         }
-        println!("DEBUG 5 {:?}", seam_map);
 
         let mut ans: Vec<i32> = Vec::new();
         for (k, v) in seam_map{

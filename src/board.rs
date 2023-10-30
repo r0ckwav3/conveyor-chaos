@@ -427,7 +427,6 @@ impl BoardState{
                 let temp: Vec<&Direction> = move_dirs[i].iter().collect();
                 move_dir[i] = Some(*temp[0]);
             } else {
-                println!("DEBUG 1");
                 let mut good = false;
                 if relevant_tiles[i][0].get_dir() == Direction::Left || relevant_tiles[i][0].get_dir() == Direction::Right{
                     good = true;
@@ -451,6 +450,7 @@ impl BoardState{
                         println!("DEBUG 3");
                         // do we have the whole seam covered
                         let mut sides_covered = HashMap::new();
+                        println!("DEBUG 4 {:?}", self.activeblockobjects[i].get_vert_seam(seam));
                         for y in self.activeblockobjects[i].get_vert_seam(seam){
                             sides_covered.insert(y, (false, false));
                         }

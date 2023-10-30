@@ -329,12 +329,19 @@ impl BlockObject{
         let mut seam_map: HashMap<i32, (bool, bool)> = HashMap::new();
         for block in self.blocks.iter(){
             if block.pos.x == x{
-                seam_map.get_mut(&block.pos.y).map(|p| p.0 = true);
+                seam_map.insert(
+                    block.pos.y,
+                    seam_map.get(&block.pos.y).map_or((true, false), |p| (true, p.1))
+                );
             }
             if block.pos.x == x+1{
-                seam_map.get_mut(&block.pos.y).map(|p| p.1 = true);
+                seam_map.insert(
+                    block.pos.y,
+                    seam_map.get(&block.pos.y).map_or((false, true), |p| (p.0, true))
+                );
             }
         }
+        println!("DEBUG 5 {:?}", seam_map);
 
         let mut ans: Vec<i32> = Vec::new();
         for (k, v) in seam_map{

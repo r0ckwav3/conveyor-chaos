@@ -9,7 +9,7 @@ In Conveyor Chaos, use a set of suprisingly versitile conveyor belts to merge, s
   - [X] Pushing
   - [X] Priority
   - [X] Merging
-  - [ ] Splitting
+  - [X] Splitting
   - [X] Output
   - [ ] Repeating Inputs
 - [ ] All the tiles/tools
@@ -20,7 +20,10 @@ In Conveyor Chaos, use a set of suprisingly versitile conveyor belts to merge, s
 - [ ] Better Win and Error States
 - [ ] Multiple Levels
 - [ ] A menu and stuff
-- [X] Better Textures
+- [ ] Better Textures
+  - [X] Better Tile Textures
+  - [ ] Better Background Textures
+  - [ ] Better Menu Textures
 - [ ] In game tutorial
 - [ ] Whatever else I want if I'm still working on this project
 

@@ -191,8 +191,6 @@ impl event::EventHandler for LevelState {
 
 impl LevelState{
     fn process_start(&mut self) -> GameResult{
-        println!("beginning");
-
         self.held = Holding::None;
 
         self.board.process_start()?;
@@ -200,8 +198,6 @@ impl LevelState{
     }
 
     fn process_end(&mut self) -> GameResult{
-        println!("ending");
-
         self.board.process_end()?;
         Ok(())
     }

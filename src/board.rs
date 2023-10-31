@@ -377,7 +377,6 @@ impl BoardState{
 
     // returning true means we won
     fn process_step(&mut self) -> SimulationResult<bool>{
-        println!("processing");
         // did we win?
         let mut winning = true;
         for out in self.blockobjects.iter().filter(|bo| bo.mode == BlockObjectMode::Output){

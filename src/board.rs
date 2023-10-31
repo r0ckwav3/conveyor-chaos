@@ -33,6 +33,7 @@ struct BoardCanvas {
 struct BoardState {
     animation_duration: Duration,
     animation_timer: Duration,
+    game_ticks: i32,
     tiles: Vec<Tile>,
     blockobjects: Vec<BlockObject>,
     activeblockobjects: Vec<BlockObject>,
@@ -240,6 +241,8 @@ impl Board{
     }
 
     pub fn process_start(&mut self) -> GameResult{
+        // immediately start the first step
+        self.state.animation_timer = self.state.animation_duration;
         self.state.process_start()
     }
 
@@ -277,6 +280,7 @@ impl BoardState{
         BoardState{
             animation_duration: Duration::from_secs_f32(ANIMATION_DURATION),
             animation_timer: Duration::ZERO,
+            game_ticks: 0,
             tiles: Vec::new(),
             blockobjects: Vec::new(),
             activeblockobjects: Vec::new(),
@@ -351,19 +355,12 @@ impl BoardState{
     }
 
     fn process_start(&mut self) -> GameResult{
-        // create the initial block objects
-        // also reset the counters
+        // reset the counters
         for bo in self.blockobjects.iter_mut(){
-            if bo.mode == BlockObjectMode::Input{
-                let mut bocopy = bo.clone();
-
-                bocopy.mode = BlockObjectMode::Processing;
-                bocopy.just_moved = true; // make delay blocks work more intuitively
-
-                self.activeblockobjects.push(bocopy);
-            }
             bo.counter = bo.start_counter;
         }
+
+        self.game_ticks = 0;
 
         Ok(())
     }
@@ -387,6 +384,22 @@ impl BoardState{
         if winning{
             return Ok(true);
         }
+
+        // place block objects every other tick
+        if self.game_ticks % 2 == 0{
+            for bo in self.blockobjects.iter_mut(){
+                if bo.mode == BlockObjectMode::Input && bo.counter > 0{
+                    let mut bocopy = bo.clone();
+
+                    bocopy.mode = BlockObjectMode::Processing;
+                    bocopy.just_moved = true; // make delay blocks work more intuitively
+                    bo.counter -= 1;
+
+                    self.activeblockobjects.push(bocopy);
+                }
+            }
+        }
+
 
         let n = self.activeblockobjects.len();
         let mut max_priority = vec![0; n];
@@ -658,6 +671,7 @@ impl BoardState{
             move_dir.remove(i);
         }
 
+        self.game_ticks += 1;
         Ok(false)
     }
 }

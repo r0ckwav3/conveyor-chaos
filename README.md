@@ -12,7 +12,7 @@ In Conveyor Chaos, use a set of suprisingly versitile conveyor belts to merge, s
   - [X] Splitting
   - [X] Output
 - [ ] All the tiles/tools
-  - [ ] Repeating Inputs
+  - [X] Repeating Inputs
   - [ ] Rotation
   - [ ] Delay tiles
   - [ ] Alternating tiles

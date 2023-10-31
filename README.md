@@ -5,14 +5,14 @@ In Conveyor Chaos, use a set of suprisingly versitile conveyor belts to merge, s
 
 ## Roadmap
 - [X] Barebones Solution Editor
-- [ ] Fully functional solution simulator
+- [X] Fully functional solution simulator
   - [X] Pushing
   - [X] Priority
   - [X] Merging
   - [X] Splitting
   - [X] Output
-  - [ ] Repeating Inputs
 - [ ] All the tiles/tools
+  - [ ] Repeating Inputs
   - [ ] Rotation
   - [ ] Delay tiles
   - [ ] Alternating tiles

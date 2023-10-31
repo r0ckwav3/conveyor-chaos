@@ -1,6 +1,6 @@
 use ggez::{
     glam,
-    graphics::{self, Image},
+    graphics::{self, Image, Text, TextFragment},
     input::mouse::MouseButton,
     Context, GameResult
 };
@@ -243,8 +243,8 @@ impl SidebarRow for SidebarRowBO{
         let bowidth = 1 + bobr.x - botl.x;
         let boheight = 1 + bobr.y - botl.y;
 
-        let width = self.tilesize * bowidth as f32;
-        let height = self.tilesize * boheight as f32;
+        let width = (self.tilesize * bowidth as f32) + SIDEBAR_COUNTER_CIRCLE_RAD;
+        let height = (self.tilesize * boheight as f32) + SIDEBAR_COUNTER_CIRCLE_RAD;
 
         let image = graphics::Image::new_canvas_image(
             ctx, color_format,
@@ -258,6 +258,35 @@ impl SidebarRow for SidebarRowBO{
             &self.blockobject.draw(ctx, self.tilesize)?,
             glam::vec2(0.0, 0.0)
         );
+
+        // draw the number if we need to
+        if self.blockobject.start_counter != 1{
+            image_canvas.draw(
+                &graphics::Mesh::new_circle(
+                    ctx,
+                    graphics::DrawMode::fill(),
+                    glam::vec2(
+                        width - SIDEBAR_COUNTER_CIRCLE_RAD,
+                        height - SIDEBAR_COUNTER_CIRCLE_RAD
+                    ),
+                    SIDEBAR_COUNTER_CIRCLE_RAD,
+                    0.2,
+                    SIDEBAR_COUNTER_CIRCLE_COLOR
+                )?,
+                graphics::DrawParam::default()
+            );
+
+            let mut text = Text::new(TextFragment::new(self.blockobject.start_counter.to_string())
+                .scale(48.0).color(SIDEBAR_COUNTER_TEXT_COLOR));
+            text.set_layout(graphics::TextLayout::center());
+            image_canvas.draw(
+                &text,
+                glam::vec2(
+                    width - SIDEBAR_COUNTER_CIRCLE_RAD,
+                    height - SIDEBAR_COUNTER_CIRCLE_RAD
+                )
+            );
+        }
 
         image_canvas.finish(ctx)?;
         Ok(image)

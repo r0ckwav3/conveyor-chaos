@@ -19,7 +19,9 @@ pub enum TileType{
     Empty,
     PushTile,
     PrioTile,
-    AltTile
+    AltTile,
+    RotTileCW,
+    RotTileCCW
 }
 
 impl Tile{
@@ -80,7 +82,9 @@ impl Tile{
             TileType::Empty => "empty_tile",
             TileType::PushTile => "push_tile",
             TileType::PrioTile => "prio_tile",
-            TileType::AltTile => "alt_tile"
+            TileType::AltTile => "alt_tile",
+            TileType::RotTileCW => "rot_tile_cw",
+            TileType::RotTileCCW => "rot_tile_ccw"
         }.to_string();
 
         if self.tiletype.rotatable(){
@@ -89,25 +93,51 @@ impl Tile{
 
         asset_cache::get_scaled_image(ctx, image_name, tilesize)
     }
-
-    // big numbers are high priority
-    pub fn get_priority(&self) -> u8{
-        match self.tiletype{
-            TileType::Empty => 0,
-            TileType::PushTile => 2,
-            TileType::PrioTile => 3,
-            TileType::AltTile => 1
-        }
-    }
 }
 
 impl TileType {
-    fn rotatable(&self) -> bool{
+    // big numbers are high priority
+    pub fn get_priority(&self) -> u8{
+        match self{
+            TileType::Empty => 0,
+            TileType::PushTile => 2,
+            TileType::PrioTile => 3,
+            TileType::AltTile => 2,
+            TileType::RotTileCW => 1,
+            TileType::RotTileCCW => 1
+        }
+    }
+
+    pub fn rotatable(&self) -> bool{
         match self{
             TileType::Empty => false,
             TileType::PushTile => true,
             TileType::PrioTile => true,
-            TileType::AltTile => true
+            TileType::AltTile => true,
+            TileType::RotTileCW => false,
+            TileType::RotTileCCW => false
+        }
+    }
+
+    pub fn is_push_tile(&self) -> bool{
+        match self{
+            TileType::Empty => false,
+            TileType::PushTile => true,
+            TileType::PrioTile => true,
+            TileType::AltTile => true,
+            TileType::RotTileCW => false,
+            TileType::RotTileCCW => false
+        }
+    }
+
+    pub fn is_rot_tile(&self) -> bool{
+        match self{
+            TileType::Empty => false,
+            TileType::PushTile => false,
+            TileType::PrioTile => false,
+            TileType::AltTile => false,
+            TileType::RotTileCW => true,
+            TileType::RotTileCCW => true
         }
     }
 }

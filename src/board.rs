@@ -1,6 +1,7 @@
 use std::time::Duration;
 use std::collections::HashMap;
 use std::collections::HashSet;
+use std::f32::consts::PI;
 
 use ggez::{
     glam,
@@ -131,7 +132,7 @@ impl Board{
                     screenpos.into()
                 },
                 BlockObjectAnimation::Rotation { theta: _, around: _ } => {
-                    panic!("do this at some point");
+                    // TODO
                     screenpos.into()
                 },
                 BlockObjectAnimation::Output => {
@@ -409,36 +410,60 @@ impl BoardState{
         for tile in self.tiles.iter(){
             for (i, blockobject) in self.activeblockobjects.iter_mut().enumerate(){
                 if blockobject.overlap_tile(tile.get_pos()){
-                    if tile.get_priority() > max_priority[i]{
-                        max_priority[i] = tile.get_priority();
+                    if tile.get_type().get_priority() > max_priority[i]{
+                        max_priority[i] = tile.get_type().get_priority();
                         relevant_tiles[i].clear();
                     }
-                    if tile.get_priority() == max_priority[i]{
+                    if tile.get_type().get_priority() == max_priority[i]{
                         relevant_tiles[i].push(tile.clone());
                     }
                 }
             }
         }
 
-        let mut move_dirs: Vec<HashSet<Direction>> = vec![HashSet::new(); n];
-        let mut move_dir: Vec<Option<Direction>> = vec![None; n];
+        let mut moves: Vec<MovementType> = vec![MovementType::None; n];
 
+        // make sure we only have one rot tile
+        // assume that rot tiles have their own reserved priority (1 for now)
+        for i in 0..self.activeblockobjects.len(){
+            if let Some(tile) = relevant_tiles[i].get(0){
+                if tile.get_type().is_rot_tile(){
+                    if relevant_tiles[i].len() > 1{
+                        return Err(SimulationError{
+                            message: "Attempted to rotate block from multiple pivots".to_string(),
+                            relevant_locations: relevant_tiles[i].iter().map(|tile| tile.get_pos()).collect()
+                        });
+                    } else {
+                        match tile.get_type(){
+                            TileType::RotTileCW => {
+                                moves[i] = MovementType::Rotation{cw: true, around: tile.get_pos()}
+                            },
+                            TileType::RotTileCCW => {
+                                moves[i] = MovementType::Rotation{cw: false, around: tile.get_pos()}
+                            },
+                            _ => panic!("Unregistered Rotation tile type")
+                        }
+                    }
+                }
+            }
+        }
+
+        let mut move_dirs: Vec<HashSet<Direction>> = vec![HashSet::new(); n];
         // list all directions
         for i in 0..self.activeblockobjects.len(){
-            //TODO: splitting
             for tile in relevant_tiles[i].iter(){
-                move_dirs[i].insert(tile.get_dir());
+                if tile.get_type().is_push_tile(){
+                    move_dirs[i].insert(tile.get_dir());
+                }
             }
         }
 
         // resolve directions which will potentially split
         for i in 0..self.activeblockobjects.len(){
-            if move_dirs[i].len() == 0 {
-                move_dir[i] = None;
-            } else if move_dirs[i].len() == 1 {
+            if move_dirs[i].len() == 1 {
                 let temp: Vec<&Direction> = move_dirs[i].iter().collect();
-                move_dir[i] = Some(*temp[0]);
-            } else {
+                moves[i] = MovementType::Translation(*temp[0]);
+            } else if move_dirs[i].len() > 1{
                 let mut good = false;
                 if relevant_tiles[i][0].get_dir() == Direction::Left || relevant_tiles[i][0].get_dir() == Direction::Right{
                     good = true;
@@ -478,8 +503,8 @@ impl BoardState{
                     if good{
                         let new_bo = self.activeblockobjects[i].split_vert_seam(seam);
                         self.activeblockobjects.push(new_bo);
-                        move_dir[i] = Some(Direction::Left);
-                        move_dir.push(Some(Direction::Right));
+                        moves[i] = MovementType::Translation(Direction::Left);
+                        moves.push(MovementType::Translation(Direction::Right));
                     }
                 } else if relevant_tiles[i][0].get_dir() == Direction::Up || relevant_tiles[i][0].get_dir() == Direction::Down{
                     good = true;
@@ -519,8 +544,8 @@ impl BoardState{
                     if good{
                         let new_bo = self.activeblockobjects[i].split_hori_seam(seam);
                         self.activeblockobjects.push(new_bo);
-                        move_dir[i] = Some(Direction::Up);
-                        move_dir.push(Some(Direction::Down));
+                        moves[i] = MovementType::Translation(Direction::Up);
+                        moves.push(MovementType::Translation(Direction::Down));
                     }
                 }
                 if !good{
@@ -547,9 +572,11 @@ impl BoardState{
                 let jtl = self.activeblockobjects[j].get_top_left().map_err(|e| SimulationError::from_string(e.to_string()))?;
                 let jbr = self.activeblockobjects[j].get_bottom_right().map_err(|e| SimulationError::from_string(e.to_string()))?;
 
-                let can_merge = match (move_dir[i], move_dir[j]){
-                    (Some(Direction::Up), Some(Direction::Down)) => (ibr.x >= jtl.x && jbr.x >= itl.x) && (jbr.y == itl.y - 1),
-                    (Some(Direction::Left), Some(Direction::Right)) => (ibr.y >= jtl.y && jbr.y >= itl.y) && (jbr.x == itl.x - 1),
+                let can_merge = match (moves[i], moves[j]){
+                    (MovementType::Translation(Direction::Up), MovementType::Translation(Direction::Down)) =>
+                        (ibr.x >= jtl.x && jbr.x >= itl.x) && (jbr.y == itl.y - 1),
+                    (MovementType::Translation(Direction::Left), MovementType::Translation(Direction::Right)) =>
+                        (ibr.y >= jtl.y && jbr.y >= itl.y) && (jbr.x == itl.x - 1),
                     _default => false
                 };
 
@@ -584,12 +611,12 @@ impl BoardState{
                 to_remove.push(i);
             }
             self.activeblockobjects.push(merged_group);
-            move_dir.push(None);
+            moves.push(MovementType::None);
         }
         to_remove.sort_unstable_by_key(|i| -(*i as i64));
         for i in to_remove{
             self.activeblockobjects.remove(i);
-            move_dir.remove(i);
+            moves.remove(i);
         }
 
         // TODO: figure out splitting before starting collision detection
@@ -612,20 +639,30 @@ impl BoardState{
             // move
             let dx: i32;
             let dy: i32;
-            match move_dir[i]{
-                Some(Direction::Right) => {dx = 1; dy = 0},
-                Some(Direction::Down)  => {dx = 0; dy = 1},
-                Some(Direction::Left)  => {dx = -1; dy = 0},
-                Some(Direction::Up)    => {dx = 0; dy = -1},
-                None                   => {dx = 0; dy = 0},
-            }
-            bo.translate(dx,dy);
-            bo.anim = BlockObjectAnimation::Translation {x: dx as f32, y: dy as f32};
-            bo.generate_bounds().map_err(|e| SimulationError::from_string(e.to_string()))?;
+            if let MovementType::Translation(move_dir) = moves[i]{
+                match move_dir{
+                    Direction::Right => {dx = 1; dy = 0},
+                    Direction::Down  => {dx = 0; dy = 1},
+                    Direction::Left  => {dx = -1; dy = 0},
+                    Direction::Up    => {dx = 0; dy = -1},
+                }
 
-            // set just_moved
-            if let Some(_) = move_dir[i]{
+                bo.translate(dx,dy);
+                bo.anim = BlockObjectAnimation::Translation {x: dx as f32, y: dy as f32};
+
+                // set just_moved
                 bo.just_moved = true;
+            } else if let MovementType::Rotation{cw, around} = moves[i]{
+                println!("DEBUG 2");
+                if cw {
+                    bo.rotate_cw(around);
+                    bo.anim = BlockObjectAnimation::Rotation {theta: -PI/2.0, around};
+                }else{
+                    bo.rotate_ccw(around);
+                    bo.anim = BlockObjectAnimation::Rotation {theta: PI/2.0, around};
+                }
+            } else {
+                bo.anim = BlockObjectAnimation::Translation {x: 0.0, y: 0.0};
             }
 
             // after move check
@@ -668,7 +705,7 @@ impl BoardState{
         to_remove.sort_unstable_by_key(|i| -(*i as i64));
         for i in to_remove{
             self.activeblockobjects.remove(i);
-            move_dir.remove(i);
+            moves.remove(i); // not really neccisary, but the housekeeping is nice
         }
 
         self.game_ticks += 1;

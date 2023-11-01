@@ -23,6 +23,13 @@ pub enum Direction{
     Right
 }
 
+#[derive(Clone, Copy)]
+pub enum MovementType{
+    Translation(Direction),
+    Rotation{cw: bool, around: BoardPos},
+    None
+}
+
 #[derive(Deserialize)]
 pub struct SerializedBlockObject{
     pub input: bool,

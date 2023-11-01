@@ -15,7 +15,7 @@ In Conveyor Chaos, use a set of suprisingly versitile conveyor belts to merge, s
   - [X] Repeating Inputs
   - [X] Rotation
   - [ ] Delay tiles
-  - [ ] Alternating tiles
+  - [X] Alternating tiles
 - [ ] Tutorial (probably just in a markdown file in this repo)
 - [ ] Better Win and Error States
 - [ ] Multiple Levels

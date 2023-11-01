@@ -376,6 +376,10 @@ impl BoardState{
             bo.counter = bo.start_counter;
         }
 
+        for tile in self.tiles.iter_mut(){
+            tile.save_dir()
+        }
+
         self.game_ticks = 0;
 
         Ok(())
@@ -384,6 +388,10 @@ impl BoardState{
     fn process_end(&mut self) -> GameResult{
         // remove active blockobjects
         self.activeblockobjects.clear();
+
+        for tile in self.tiles.iter_mut(){
+            tile.load_dir()
+        }
 
         Ok(())
     }
@@ -692,6 +700,21 @@ impl BoardState{
                 message: "Collision occured".to_string(),
                 relevant_locations: collisions
             })
+        }
+
+        // update alternating tiles
+        // relevant_tiles contains copies of the real tiles, so I've got to grab the
+        // real ones back
+        let mut toflip: HashSet<BoardPos> = HashSet::new();
+        for tile in relevant_tiles.iter().flatten(){
+            if tile.get_type() == TileType::AltTile{
+                toflip.insert(tile.get_pos());
+            }
+        }
+        for tile in self.tiles.iter_mut(){
+            if toflip.contains(&tile.get_pos()){
+                tile.flip_dir();
+            }
         }
 
         // erase things on outputs

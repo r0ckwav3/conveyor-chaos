@@ -12,6 +12,7 @@ pub struct Tile {
     tiletype: TileType,
     dir: Direction,
     pos: BoardPos,
+    orinal_dir: Direction // only used by alternating tiles
 }
 
 #[derive(Eq, PartialEq, Hash, Debug, Clone, Copy)]
@@ -29,7 +30,8 @@ impl Tile{
         Tile{
             tiletype,
             dir: Direction::Right,
-            pos
+            pos,
+            orinal_dir: Direction::Right,
         }
     }
 
@@ -37,7 +39,8 @@ impl Tile{
         Tile{
             tiletype,
             dir,
-            pos
+            pos,
+            orinal_dir: dir,
         }
     }
 
@@ -92,6 +95,18 @@ impl Tile{
         }
 
         asset_cache::get_scaled_image(ctx, image_name, tilesize)
+    }
+
+    pub fn save_dir(&mut self){
+        self.orinal_dir = self.dir;
+    }
+
+    pub fn load_dir(&mut self){
+        self.dir = self.orinal_dir;
+    }
+
+    pub fn flip_dir(&mut self){
+        self.dir = self.dir.clockwise().clockwise();
     }
 }
 

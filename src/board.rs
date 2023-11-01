@@ -131,9 +131,24 @@ impl Board{
                     screenpos.y += y * self.canvas.tile_size * (animation_proportion - 1.0);
                     screenpos.into()
                 },
-                BlockObjectAnimation::Rotation { theta: _, around: _ } => {
-                    // TODO
-                    screenpos.into()
+                BlockObjectAnimation::Rotation { theta , around } => {
+                    // The default behaviour of ggez is to rotate around the *original* top left
+                    // we want to find the shift that turns that into rotation around `around`
+                    // consider the vector pointing from the pivot to around
+                    // find out where it points after the rotation
+                    // point it in the right direction
+                    let rot = theta*(1.0 - animation_proportion);
+                    let bo_tl = blockobject.get_top_left()?;
+                    let around_vec = glam::vec2(
+                        self.canvas.tile_size * ((around.x - bo_tl.x) as f32 + 0.5),
+                        self.canvas.tile_size * ((around.y - bo_tl.y) as f32 + 0.5)
+                    );
+                    let rot_mat = glam::Mat2::from_angle(rot);
+                    let rotated_vec = rot_mat * around_vec;
+                    screenpos.x += around_vec.x - rotated_vec.x;
+                    screenpos.y += around_vec.y - rotated_vec.y;
+                    let param: graphics::DrawParam= screenpos.into();
+                    param.rotation(rot)
                 },
                 BlockObjectAnimation::Output => {
                     // TODO: think of some fun animation to do here
@@ -619,8 +634,6 @@ impl BoardState{
             moves.remove(i);
         }
 
-        // TODO: figure out splitting before starting collision detection
-
         let mut collision_map: HashMap<BoardPos, usize> = HashMap::new();
         let mut collisions: Vec<BoardPos> = Vec::new();
 
@@ -653,7 +666,6 @@ impl BoardState{
                 // set just_moved
                 bo.just_moved = true;
             } else if let MovementType::Rotation{cw, around} = moves[i]{
-                println!("DEBUG 2");
                 if cw {
                     bo.rotate_cw(around);
                     bo.anim = BlockObjectAnimation::Rotation {theta: -PI/2.0, around};

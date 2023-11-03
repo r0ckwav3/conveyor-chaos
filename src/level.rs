@@ -14,20 +14,25 @@ use crate::board::Board;
 use crate::tile::Tile;
 use crate::block::{BlockObjectMode, BlockObject, Block};
 use crate::sidebar::Sidebar;
+use crate::mainstate::SceneState;
+use crate::popup_box::PopupBox;
 use crate::helpers::*;
 use crate::constants::*;
-use crate::mainstate::SceneState;
 
 pub struct LevelState {
     board: Board,
     sidebar: Sidebar,
     held: Holding,
-    mode: LevelMode
-}
+    mode: LevelMode,
+    popup: Option<PopupBox>
+ }
 
+#[derive(PartialEq)]
 pub enum LevelMode {
     Building,
-    Running
+    Running,
+    Error,
+    Victory
 }
 
 pub enum Holding {
@@ -38,13 +43,14 @@ pub enum Holding {
 
 impl LevelState {
     pub fn new(_ctx: &mut Context) -> GameResult<LevelState> {
-        let blockobjects = Self::load_level("Testlevel3")?;
+        let blockobjects = Self::load_level("Testlevel2")?;
 
         Ok(LevelState {
             board: Board::new(BOARD_POS),
             sidebar: Sidebar::new(SIDEBAR_POS, &blockobjects)?,
             held: Holding::None,
-            mode: LevelMode::Building
+            mode: LevelMode::Building,
+            popup: None
         })
     }
 
@@ -91,12 +97,18 @@ impl event::EventHandler for LevelState {
         match sim_result{
             Err(sim_err) => {
                 println!("{}: {:?}", sim_err.message, sim_err.relevant_locations);
-                self.mode = LevelMode::Building; // TODO: add Error state where the player can see the error message
-                self.board.process_end()?;
+                self.popup = Some(PopupBox::new(
+                    POPUP_WIDTH, POPUP_HEIGHT,
+                    sim_err.message
+                ));
+                self.mode = LevelMode::Error;
             }
             Ok(true) => {
-                println!("You Win!!!!!!");
-                self.mode = LevelMode::Building; // TODO: add win state where the player can see the stats or something
+                self.popup = Some(PopupBox::new(
+                    POPUP_WIDTH, POPUP_HEIGHT,
+                    "You Win!!!!!!"
+                ));
+                self.mode = LevelMode::Victory;
                 self.board.process_end()?;
             }
             _default => ()
@@ -125,6 +137,28 @@ impl event::EventHandler for LevelState {
                     ctx.mouse.position().y - HELD_TILESIZE/2.0
                 )
             );
+        }
+
+        // draw popup messages
+        if self.mode == LevelMode::Error || self.mode == LevelMode::Victory{
+            canvas.draw(
+                &graphics::Mesh::new_rectangle(
+                    ctx,
+                    graphics::DrawMode::fill(),
+                    graphics::Rect::new(0.0, 0.0, SCREEN_SIZE.0, SCREEN_SIZE.1),
+                    POPUP_OVERLAY_COLOR
+                )?,
+                graphics::DrawParam::default()
+            );
+            if let Some(popup) = &mut self.popup{
+                canvas.draw(
+                    &popup.draw(ctx)?,
+                    glam::vec2(
+                        (SCREEN_SIZE.0 - popup.get_width())/2.0,
+                        (SCREEN_SIZE.1 - popup.get_height())/2.0
+                    )
+                )
+            }
         }
 
         canvas.finish(ctx)?;
@@ -177,6 +211,18 @@ impl event::EventHandler for LevelState {
                 }
                 LevelMode::Running => {
                     self.process_end()?;
+                    self.mode = LevelMode::Building;
+                }
+                LevelMode::Error => {
+                    if let Some(_) = self.popup{
+                        self.popup = None
+                    }else{
+                        self.board.process_end()?;
+                        self.mode = LevelMode::Building;
+                    }
+                }
+                LevelMode::Victory => {
+                    // TODO: exit out to level select or seomthing
                     self.mode = LevelMode::Building;
                 }
             }

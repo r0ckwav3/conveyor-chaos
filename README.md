@@ -18,6 +18,8 @@ In Conveyor Chaos, use a set of suprisingly versitile conveyor belts to merge, s
   - [X] Alternating tiles
 - [ ] Tutorial (probably just in a markdown file in this repo)
 - [ ] Better Win and Error States
+  - [X] Popup box
+  - [ ] Error location indicators
 - [ ] Multiple Levels
 - [ ] A menu and stuff
 - [ ] Better Textures
@@ -25,6 +27,7 @@ In Conveyor Chaos, use a set of suprisingly versitile conveyor belts to merge, s
   - [ ] Better Background Textures
   - [ ] Better Menu Textures
 - [ ] In game tutorial
+- [ ] Improve code structure using the Drawable Trait
 - [ ] Whatever else I want if I'm still working on this project
 
 ## Known bugs

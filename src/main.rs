@@ -11,6 +11,7 @@ pub mod mainstate;
 pub mod sidebar;
 pub mod level;
 pub mod asset_cache;
+pub mod popup_box;
 
 pub fn main() -> GameResult {
     let cb = ggez::ContextBuilder::new("conveyor-chaos", "r0ckwav3")

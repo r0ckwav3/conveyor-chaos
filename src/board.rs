@@ -50,8 +50,7 @@ impl Board{
     }
 
     pub fn update(&mut self, ctx: &mut Context, mode: &LevelMode) -> SimulationResult<bool> {
-        match *mode{
-            LevelMode::Building => Ok(false),
+        match mode{
             LevelMode::Running => {
                 self.state.animation_timer += ctx.time.delta();
                 while self.state.animation_timer >= self.state.animation_duration{
@@ -61,7 +60,8 @@ impl Board{
                     }
                 }
                 Ok(false)
-            }
+            },
+            _default => Ok(false)
         }
     }
 

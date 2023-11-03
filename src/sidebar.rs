@@ -277,7 +277,7 @@ impl SidebarRow for SidebarRowBO{
             );
 
             let mut text = Text::new(TextFragment::new(self.blockobject.start_counter.to_string())
-                .scale(48.0).color(SIDEBAR_COUNTER_TEXT_COLOR));
+                .scale(SIDEBAR_COUNTER_SCALE).color(SIDEBAR_COUNTER_TEXT_COLOR));
             text.set_layout(graphics::TextLayout::center());
             image_canvas.draw(
                 &text,

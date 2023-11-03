@@ -19,7 +19,8 @@ In Conveyor Chaos, use a set of suprisingly versitile conveyor belts to merge, s
 - [ ] Tutorial (probably just in a markdown file in this repo)
 - [ ] Better Win and Error States
   - [X] Popup box
-  - [ ] Error location indicators
+  - [X] Error location indicators
+  - [ ] Non Runtime errors (like not having placed all inputs and outputs)
 - [ ] Multiple Levels
 - [ ] A menu and stuff
 - [ ] Better Textures

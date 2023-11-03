@@ -11,6 +11,7 @@ use ggez::{
     Context, GameResult
 };
 
+use crate::asset_cache::get_scaled_image;
 use crate::level::{Holding, LevelMode};
 use crate::tile::{Tile, TileType};
 use crate::block::{BlockObject, BlockObjectMode, BlockObjectAnimation};
@@ -38,6 +39,7 @@ struct BoardState {
     tiles: Vec<Tile>,
     blockobjects: Vec<BlockObject>,
     activeblockobjects: Vec<BlockObject>,
+    error_locs: Vec<BoardPos>
 }
 
 impl Board{
@@ -55,8 +57,13 @@ impl Board{
                 self.state.animation_timer += ctx.time.delta();
                 while self.state.animation_timer >= self.state.animation_duration{
                     self.state.animation_timer -= self.state.animation_duration;
-                    if self.state.process_step()?{
-                        return Ok(true)
+                    match self.state.process_step(){
+                        Ok(true) => {return Ok(true);},
+                        Err(sim_err) => {
+                            self.state.error_locs = sim_err.relevant_locations.clone();
+                            return Err(sim_err);
+                        },
+                        _ => ()
                     }
                 }
                 Ok(false)
@@ -124,7 +131,12 @@ impl Board{
                 bo_pos.y as f32 * self.canvas.tile_size - self.canvas.offset_y
             );
 
-            let animation_proportion = self.state.animation_timer.as_secs_f32()/self.state.animation_duration.as_secs_f32();
+            let animation_proportion = match mode {
+                LevelMode::Running => self.state.animation_timer.as_secs_f32()/self.state.animation_duration.as_secs_f32(),
+                LevelMode::Error => 0.3,
+                _ => 1.0
+            };
+
             let param: graphics::DrawParam = match blockobject.anim{
                 BlockObjectAnimation::Translation { x, y } => {
                     screenpos.x += x * self.canvas.tile_size * (animation_proportion - 1.0);
@@ -163,11 +175,28 @@ impl Board{
                     image_canvas.draw(&bo_image, param),
                 (BlockObjectMode::Processing, LevelMode::Running) =>
                     image_canvas.draw(&mult_alpha(ctx, bo_image, RUNNING_BLOCKOBJECT_ALPHA)?, param),
+                (BlockObjectMode::Processing, LevelMode::Error) =>
+                    image_canvas.draw(&mult_alpha(ctx, bo_image, RUNNING_BLOCKOBJECT_ALPHA)?, param),
                 _default => ()
             }
 
         }
 
+        if let LevelMode::Error = mode{
+            for error_pos in self.state.error_locs.iter(){
+                if error_pos.x >= tilex_min && error_pos.x <= tilex_max &&
+                    error_pos.y >= tiley_min && error_pos.y <= tiley_max{
+
+                    image_canvas.draw(
+                        &get_scaled_image(ctx, "error_tile".to_string(), self.canvas.tile_size)?,
+                        glam::vec2(
+                            error_pos.x as f32 * self.canvas.tile_size - self.canvas.offset_x,
+                            error_pos.y as f32 * self.canvas.tile_size - self.canvas.offset_y
+                        )
+                    )
+                }
+            }
+        }
 
         image_canvas.finish(ctx)?;
 
@@ -300,6 +329,7 @@ impl BoardState{
             tiles: Vec::new(),
             blockobjects: Vec::new(),
             activeblockobjects: Vec::new(),
+            error_locs: Vec::new()
         }
     }
 

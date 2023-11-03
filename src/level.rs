@@ -43,7 +43,7 @@ pub enum Holding {
 
 impl LevelState {
     pub fn new(_ctx: &mut Context) -> GameResult<LevelState> {
-        let blockobjects = Self::load_level("Testlevel2")?;
+        let blockobjects = Self::load_level("Testlevel1")?;
 
         Ok(LevelState {
             board: Board::new(BOARD_POS),

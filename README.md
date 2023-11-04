@@ -20,7 +20,7 @@ In Conveyor Chaos, use a set of suprisingly versitile conveyor belts to merge, s
 - [ ] Better Win and Error States
   - [X] Popup box
   - [X] Error location indicators
-  - [ ] Non Runtime errors (like not having placed all inputs and outputs)
+  - [X] Non Runtime errors (like not having placed all inputs and outputs)
 - [ ] Multiple Levels
 - [ ] A menu and stuff
 - [ ] Better Textures
@@ -33,3 +33,4 @@ In Conveyor Chaos, use a set of suprisingly versitile conveyor belts to merge, s
 
 ## Known bugs
  - Rotating a held tile will also rotate the tile you are hovering over.
+ - Rotating a very long object makes collisions unintuitive

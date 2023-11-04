@@ -96,7 +96,6 @@ impl event::EventHandler for LevelState {
         let sim_result = self.board.update(ctx, &self.mode);
         match sim_result{
             Err(sim_err) => {
-                println!("{}: {:?}", sim_err.message, sim_err.relevant_locations);
                 self.popup = Some(PopupBox::new(
                     POPUP_WIDTH, POPUP_HEIGHT,
                     sim_err.message
@@ -139,7 +138,6 @@ impl event::EventHandler for LevelState {
             );
         }
 
-        // draw popup messages
         if self.mode == LevelMode::Error || self.mode == LevelMode::Victory{
             canvas.draw(
                 &graphics::Mesh::new_rectangle(
@@ -150,15 +148,16 @@ impl event::EventHandler for LevelState {
                 )?,
                 graphics::DrawParam::default()
             );
-            if let Some(popup) = &mut self.popup{
-                canvas.draw(
-                    &popup.draw(ctx)?,
-                    glam::vec2(
-                        (SCREEN_SIZE.0 - popup.get_width())/2.0,
-                        (SCREEN_SIZE.1 - popup.get_height())/2.0
-                    )
+        }
+
+        if let Some(popup) = &mut self.popup{
+            canvas.draw(
+                &popup.draw(ctx)?,
+                glam::vec2(
+                    (SCREEN_SIZE.0 - popup.get_width())/2.0,
+                    (SCREEN_SIZE.1 - popup.get_height())/2.0
                 )
-            }
+            )
         }
 
         canvas.finish(ctx)?;
@@ -197,33 +196,34 @@ impl event::EventHandler for LevelState {
                 }
             }
         }else if input.keycode == Some(KeyCode::Return){
-            match self.mode{
-                LevelMode::Building => {
-                    // everything has been placed
-                    if self.sidebar.num_blockobjects() == self.board.num_blockobjects(){
-                        self.process_start()?;
-                        self.mode = LevelMode::Running;
-                    }else{
-                        // TODO: display this to the player somehow
-                        // could use the error state if I want
-                        println!("Please place all inputs and outputs first")
+            if let Some(_) = self.popup{
+                self.popup = None
+            }else{
+                match self.mode{
+                    LevelMode::Building => {
+                        // everything has been placed
+                        if self.sidebar.num_blockobjects() == self.board.num_blockobjects(){
+                            self.process_start()?;
+                            self.mode = LevelMode::Running;
+                        }else{
+                            self.popup = Some(PopupBox::new(
+                                POPUP_WIDTH, POPUP_HEIGHT,
+                                "Must place all inputs and outputs first"
+                            ));
+                        }
                     }
-                }
-                LevelMode::Running => {
-                    self.process_end()?;
-                    self.mode = LevelMode::Building;
-                }
-                LevelMode::Error => {
-                    if let Some(_) = self.popup{
-                        self.popup = None
-                    }else{
+                    LevelMode::Running => {
+                        self.process_end()?;
+                        self.mode = LevelMode::Building;
+                    }
+                    LevelMode::Error => {
                         self.board.process_end()?;
                         self.mode = LevelMode::Building;
                     }
-                }
-                LevelMode::Victory => {
-                    // TODO: exit out to level select or seomthing
-                    self.mode = LevelMode::Building;
+                    LevelMode::Victory => {
+                        // TODO: exit out to level select or seomthing
+                        self.mode = LevelMode::Building;
+                    }
                 }
             }
         }

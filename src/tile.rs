@@ -22,7 +22,8 @@ pub enum TileType{
     PrioTile,
     AltTile,
     RotTileCW,
-    RotTileCCW
+    RotTileCCW,
+    DelayTile
 }
 
 impl Tile{
@@ -87,7 +88,8 @@ impl Tile{
             TileType::PrioTile => "prio_tile",
             TileType::AltTile => "alt_tile",
             TileType::RotTileCW => "rot_tile_cw",
-            TileType::RotTileCCW => "rot_tile_ccw"
+            TileType::RotTileCCW => "rot_tile_ccw",
+            TileType::DelayTile => "delay_tile"
         }.to_string();
 
         if self.tiletype.rotatable(){
@@ -115,11 +117,12 @@ impl TileType {
     pub fn get_priority(&self) -> u8{
         match self{
             TileType::Empty => 0,
-            TileType::PushTile => 2,
-            TileType::PrioTile => 3,
-            TileType::AltTile => 2,
+            TileType::PushTile => 3,
+            TileType::PrioTile => 4,
+            TileType::AltTile => 3,
             TileType::RotTileCW => 1,
-            TileType::RotTileCCW => 1
+            TileType::RotTileCCW => 1,
+            TileType::DelayTile => 2 // this should never get into prio fights
         }
     }
 
@@ -130,7 +133,8 @@ impl TileType {
             TileType::PrioTile => true,
             TileType::AltTile => true,
             TileType::RotTileCW => false,
-            TileType::RotTileCCW => false
+            TileType::RotTileCCW => false,
+            TileType::DelayTile => true
         }
     }
 
@@ -141,7 +145,8 @@ impl TileType {
             TileType::PrioTile => true,
             TileType::AltTile => true,
             TileType::RotTileCW => false,
-            TileType::RotTileCCW => false
+            TileType::RotTileCCW => false,
+            TileType::DelayTile => true
         }
     }
 
@@ -152,7 +157,8 @@ impl TileType {
             TileType::PrioTile => false,
             TileType::AltTile => false,
             TileType::RotTileCW => true,
-            TileType::RotTileCCW => true
+            TileType::RotTileCCW => true,
+            TileType::DelayTile => false
         }
     }
 }

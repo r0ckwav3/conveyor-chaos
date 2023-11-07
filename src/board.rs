@@ -463,6 +463,9 @@ impl BoardState{
         for tile in self.tiles.iter(){
             for (i, blockobject) in self.activeblockobjects.iter_mut().enumerate(){
                 if blockobject.overlap_tile(tile.get_pos()){
+                    if tile.get_type() == TileType::DelayTile && blockobject.just_moved{
+                        continue
+                    }
                     if tile.get_type().get_priority() > max_priority[i]{
                         max_priority[i] = tile.get_type().get_priority();
                         relevant_tiles[i].clear();

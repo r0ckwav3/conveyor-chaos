@@ -11,13 +11,13 @@ In Conveyor Chaos, use a set of suprisingly versitile conveyor belts to merge, s
   - [X] Merging
   - [X] Splitting
   - [X] Output
-- [ ] All the tiles/tools
+- [X] All the tiles/tools
   - [X] Repeating Inputs
   - [X] Rotation
-  - [ ] Delay tiles
+  - [X] Delay tiles
   - [X] Alternating tiles
 - [ ] Tutorial (probably just in a markdown file in this repo)
-- [ ] Better Win and Error States
+- [X] Better Win and Error States
   - [X] Popup box
   - [X] Error location indicators
   - [X] Non Runtime errors (like not having placed all inputs and outputs)

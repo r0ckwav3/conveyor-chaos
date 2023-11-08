@@ -675,7 +675,7 @@ impl BoardState{
             moves.remove(i);
         }
 
-        let mut collision_map: HashMap<BoardPos, usize> = HashMap::new();
+        let mut collision_map: HashMap<BoardPos, Vec<usize>> = HashMap::new();
         let mut collisions: Vec<BoardPos> = Vec::new();
 
         // MOVE THOSE FELLAS
@@ -683,10 +683,15 @@ impl BoardState{
             let bo = &mut self.activeblockobjects[i];
             // before move check
             for block in bo.blocks.iter_mut(){
-                if let Some(current) = collision_map.insert(block.pos, i){
-                    if current != i{
-                        collisions.push(block.pos.clone());
+                if let Some(curr) = collision_map.get_mut(&block.pos){
+                    if let None = curr.iter().position(|a| *a == i){ // if i not in curr
+                        if curr.len() == 1{ // this is the second thing inserted
+                            collisions.push(block.pos.clone());
+                        }
+                        curr.push(i);
                     }
+                }else{
+                    collision_map.insert(block.pos.clone(), vec![i]);
                 }
             }
 
@@ -720,18 +725,41 @@ impl BoardState{
 
             // after move check
             for block in bo.blocks.iter_mut(){
-                if let Some(current) = collision_map.insert(block.pos, i){
-                    if current != i{
-                        collisions.push(block.pos.clone());
+                if let Some(curr) = collision_map.get_mut(&block.pos){
+                    if curr.iter().position(|a| *a == i) == None{
+                        if curr.len() == 1{ // this is the second thing inserted
+                            collisions.push(block.pos.clone());
+                        }
+                        curr.push(i);
                     }
+                }else{
+                    collision_map.insert(block.pos.clone(), vec![i]);
                 }
             }
         }
 
-        if collisions.len() != 0{
+        // remove all collisions that have stuff moving in the same directions
+        let filtered_collisions = collisions.into_iter().filter(|collision|{
+            let bos = collision_map.get(collision).unwrap();
+            if let MovementType::Translation(firstdir) = moves[bos[0]]{
+                for bo in bos{
+                    if let MovementType::Translation(otherdir) = moves[*bo]{
+                        if firstdir != otherdir{
+                            return true;
+                        }
+                    }else{
+                        return true;
+                    }
+                }
+                return false;
+            }
+            return true;
+        }).collect::<Vec<_>>();
+
+        if filtered_collisions.len() != 0{
             return Err(SimulationError{
                 message: "Collision occured".to_string(),
-                relevant_locations: collisions
+                relevant_locations: filtered_collisions
             })
         }
 

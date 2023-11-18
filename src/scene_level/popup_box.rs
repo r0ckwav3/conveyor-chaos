@@ -37,6 +37,9 @@ impl PopupBox{
                 self.height - (self.margin_y * 2.0)))
             .set_font(POPUP_FONT)
             .set_scale(POPUP_SCALE);
+        self.text.fragments_mut().iter_mut().for_each(|frag|{
+            frag.color = Some(POPUP_TEXT_COLOR);
+        });
     }
 
     pub fn set_text(&mut self, content: impl Into<Text>){

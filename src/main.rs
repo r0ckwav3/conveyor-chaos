@@ -2,16 +2,18 @@ use ggez::{event, GameResult};
 
 use constants::*;
 
-pub mod board;
-pub mod tile;
-pub mod block;
+mod scene_level;
+pub use scene_level::level;
+pub use scene_level::board;
+pub use scene_level::tile;
+pub use scene_level::block;
+pub use scene_level::sidebar;
+pub use scene_level::popup_box;
+
 pub mod constants;
 pub mod helpers;
 pub mod mainstate;
-pub mod sidebar;
-pub mod level;
 pub mod asset_cache;
-pub mod popup_box;
 
 pub fn main() -> GameResult {
     let cb = ggez::ContextBuilder::new("conveyor-chaos", "r0ckwav3")

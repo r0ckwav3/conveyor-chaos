@@ -11,10 +11,12 @@ use ggez::{
     Context, GameResult
 };
 
-use crate::asset_cache::get_scaled_image;
-use crate::level::{Holding, LevelMode};
-use crate::tile::{Tile, TileType};
-use crate::block::{BlockObject, BlockObjectMode, BlockObjectAnimation};
+use super::level::{Holding, LevelMode};
+use super::tile::{Tile, TileType};
+use super::block::{BlockObject, BlockObjectMode, BlockObjectAnimation};
+use super::helpers::*;
+use super::constants::*;
+
 use crate::constants::*;
 use crate::helpers::*;
 use crate::asset_cache;
@@ -188,7 +190,7 @@ impl Board{
                     error_pos.y >= tiley_min && error_pos.y <= tiley_max{
 
                     image_canvas.draw(
-                        &get_scaled_image(ctx, "error_tile".to_string(), self.canvas.tile_size)?,
+                        &asset_cache::get_scaled_image(ctx, "error_tile".to_string(), self.canvas.tile_size)?,
                         glam::vec2(
                             error_pos.x as f32 * self.canvas.tile_size - self.canvas.offset_x,
                             error_pos.y as f32 * self.canvas.tile_size - self.canvas.offset_y

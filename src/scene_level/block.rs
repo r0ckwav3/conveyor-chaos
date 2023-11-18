@@ -7,7 +7,9 @@ use ggez::{
     Context, GameResult
 };
 
-use crate::helpers::*;
+use super::helpers::*;
+use super::constants::*;
+
 use crate::constants::*;
 
 #[derive(Copy, Clone)]

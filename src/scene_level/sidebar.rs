@@ -5,11 +5,13 @@ use ggez::{
     Context, GameResult
 };
 
-use crate::level::{Holding, LevelMode};
-use crate::tile::{Tile, TileType};
-use crate::block::BlockObject;
+use super::tile::{Tile, TileType};
+use super::block::BlockObject;
+use super::helpers::*;
+use super::constants::*;
+
 use crate::constants::*;
-use crate::helpers::*;
+use crate::level::{Holding, LevelMode};
 
 pub struct Sidebar{
     pos: graphics::Rect, // I'm secretly going to render everything in here

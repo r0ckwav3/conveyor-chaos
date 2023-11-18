@@ -4,11 +4,6 @@ use constants::*;
 
 mod scene_level;
 pub use scene_level::level;
-pub use scene_level::board;
-pub use scene_level::tile;
-pub use scene_level::block;
-pub use scene_level::sidebar;
-pub use scene_level::popup_box;
 
 pub mod constants;
 pub mod helpers;

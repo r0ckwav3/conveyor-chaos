@@ -4,8 +4,9 @@ use ggez::{
     Context, GameResult
 };
 
+use super::constants::*;
+
 use crate::constants::*;
-use crate::helpers::*;
 
 pub struct PopupBox{
     width: f32,

@@ -10,14 +10,17 @@ use ggez::{
     Context, GameResult, GameError
 };
 
-use crate::board::Board;
-use crate::tile::Tile;
-use crate::block::{BlockObjectMode, BlockObject, Block};
-use crate::sidebar::Sidebar;
-use crate::mainstate::SceneState;
-use crate::popup_box::PopupBox;
-use crate::helpers::*;
+use super::helpers::*;
+use super::board::Board;
+use super::tile::Tile;
+use super::block::{BlockObjectMode, BlockObject, Block};
+use super::sidebar::Sidebar;
+use super::popup_box::PopupBox;
+use super::constants::*;
+
 use crate::constants::*;
+use crate::mainstate::SceneState;
+use crate::helpers::*;
 
 pub struct LevelState {
     board: Board,

@@ -44,6 +44,7 @@ impl PopupBox{
 
     pub fn set_text(&mut self, content: impl Into<Text>){
         self.text = content.into();
+        self.setup_text();
     }
 
     pub fn get_width(&self) -> f32{

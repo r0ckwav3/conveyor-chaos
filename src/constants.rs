@@ -1,6 +1,6 @@
 use std::time::Duration;
 
-use ggez::graphics::{Color, Rect};
+use ggez::graphics::Color;
 
 // window and other setup
 pub const SCREEN_SIZE: (f32, f32) = (1920.0,1280.0);

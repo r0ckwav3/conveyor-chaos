@@ -1,4 +1,5 @@
 use std::time::Duration;
+use std::sync::mpsc;
 
 use ggez::{
     event,
@@ -8,24 +9,46 @@ use ggez::{
 
 use crate::level::LevelState;
 use crate::constants::*;
+use crate::helpers::*;
 
 pub struct MainState {
+    scene_channel_r: mpsc::Receiver<SceneMessage>,
     scene: Box<dyn SceneState>,
     click_time: Duration
 }
 
 impl MainState {
     pub fn new(ctx: &mut Context) -> GameResult<MainState> {
+        let (s,r) = mpsc::channel();
         Ok(MainState{
-            scene: Box::new(LevelState::new(ctx)?),
+            scene_channel_r: r,
+            scene: Box::new(LevelState::new(ctx, s, "Testlevel1")?),
             click_time: Duration::ZERO
         })
+    }
+
+    fn process_scene_channel(&mut self, ctx: &mut Context) -> GameResult{
+        while let Ok(message) = self.scene_channel_r.try_recv(){
+            match message{
+                SceneMessage::EnterSceneLevel { levelname } => {
+                    self.scene.cleanup(ctx)?;
+                    let (s,r) = mpsc::channel();
+                    self.scene = Box::new(LevelState::new(ctx, s, &levelname)?);
+                    self.scene_channel_r = r;
+                }
+                SceneMessage::EnterSceneMainMenu => {
+                    panic!("unimplemented")
+                }
+            }
+        }
+        Ok(())
     }
 }
 
 impl event::EventHandler for MainState {
     fn update(&mut self, ctx: &mut Context) -> GameResult {
         self.scene.update(ctx)?;
+        self.process_scene_channel(ctx)?;
         Ok(())
     }
 
@@ -73,6 +96,10 @@ pub trait SceneState: event::EventHandler{
             _x: f32,
             _y: f32
     ) -> GameResult{
+        Ok(())
+    }
+
+    fn cleanup(&mut self, ctx: &mut Context) -> GameResult {
         Ok(())
     }
 }

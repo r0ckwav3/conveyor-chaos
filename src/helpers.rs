@@ -7,6 +7,12 @@ use ggez::{
     mint::Point2
 };
 
+// messages sent to mainstate from an individual scene
+pub enum SceneMessage{
+    EnterSceneLevel{levelname: String},
+    EnterSceneMainMenu,
+}
+
 // takes in a DrawParam and adjusts the dest so that that the original dest point is now the actual top left corner
 // assumes offset is 0, causes unexpected behavior otherwise
 // designed to work with right angles, but technically works otherwise

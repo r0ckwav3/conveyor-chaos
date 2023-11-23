@@ -1,6 +1,7 @@
 use std::path::Path;
 use std::io;
 use std::fs;
+use std::sync::mpsc;
 
 use ggez::{
     glam,
@@ -27,7 +28,8 @@ pub struct LevelState {
     sidebar: Sidebar,
     held: Holding,
     mode: LevelMode,
-    popup: Option<PopupBox>
+    popup: Option<PopupBox>,
+    scene_channel_s: mpsc::Sender<SceneMessage>
  }
 
 #[derive(PartialEq)]
@@ -45,15 +47,16 @@ pub enum Holding {
 }
 
 impl LevelState {
-    pub fn new(_ctx: &mut Context) -> GameResult<LevelState> {
-        let blockobjects = Self::load_level("Testlevel1")?;
+    pub fn new(_ctx: &mut Context, s: mpsc::Sender<SceneMessage>, levelname: &str) -> GameResult<LevelState> {
+        let blockobjects = Self::load_level(levelname)?;
 
         Ok(LevelState {
             board: Board::new(BOARD_POS),
             sidebar: Sidebar::new(SIDEBAR_POS, &blockobjects)?,
             held: Holding::None,
             mode: LevelMode::Building,
-            popup: None
+            popup: None,
+            scene_channel_s: s
         })
     }
 
@@ -224,7 +227,8 @@ impl event::EventHandler for LevelState {
                         self.mode = LevelMode::Building;
                     }
                     LevelMode::Victory => {
-                        // TODO: exit out to level select or seomthing
+                        self.scene_channel_s.send(SceneMessage::EnterSceneLevel { levelname: "Testlevel2".to_string() })
+                            .map_err(|e| GameError::CustomError(e.to_string()))?;
                         self.mode = LevelMode::Building;
                     }
                 }

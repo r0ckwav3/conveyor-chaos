@@ -3,7 +3,7 @@ use ggez::{event, GameResult};
 use constants::*;
 
 mod scene_level;
-pub use scene_level::level;
+mod scene_main_menu;
 
 pub mod constants;
 pub mod helpers;

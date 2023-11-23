@@ -7,7 +7,8 @@ use ggez::{
     Context, GameResult,
 };
 
-use crate::level::LevelState;
+use crate::scene_level::level::LevelState;
+use crate::scene_main_menu::main_menu::MainMenuState;
 use crate::constants::*;
 use crate::helpers::*;
 
@@ -22,7 +23,7 @@ impl MainState {
         let (s,r) = mpsc::channel();
         Ok(MainState{
             scene_channel_r: r,
-            scene: Box::new(LevelState::new(ctx, s, "Testlevel1")?),
+            scene: Box::new(MainMenuState::new(ctx,s)?),
             click_time: Duration::ZERO
         })
     }
@@ -37,7 +38,10 @@ impl MainState {
                     self.scene_channel_r = r;
                 }
                 SceneMessage::EnterSceneMainMenu => {
-                    panic!("unimplemented")
+                    self.scene.cleanup(ctx)?;
+                    let (s,r) = mpsc::channel();
+                    self.scene = Box::new(MainMenuState::new(ctx, s)?);
+                    self.scene_channel_r = r;
                 }
             }
         }

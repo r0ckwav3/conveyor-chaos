@@ -227,7 +227,7 @@ impl event::EventHandler for LevelState {
                         self.mode = LevelMode::Building;
                     }
                     LevelMode::Victory => {
-                        self.scene_channel_s.send(SceneMessage::EnterSceneLevel { levelname: "Testlevel2".to_string() })
+                        self.scene_channel_s.send(SceneMessage::EnterSceneMainMenu)
                             .map_err(|e| GameError::CustomError(e.to_string()))?;
                         self.mode = LevelMode::Building;
                     }
